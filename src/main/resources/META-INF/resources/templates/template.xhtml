@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:h="http://java.sun.com/jsf/html">
+
+<h:head>
+    <f:metadata charset="utf-8"/>
+    <h:outputStylesheet library="css" name="custom.css"/>
+    <ui:insert name="header">
+        <title>Конфигоскоп</title>
+    </ui:insert>
+</h:head>
+
+<h:body>
+    <h:form>
+        <p:menubar>
+            <p:menuitem icon="fa fa-gear" onclick="PF('left-menu').show()"/>
+            <f:facet name="options">
+                <ui:insert name="title"/>
+            </f:facet>
+        </p:menubar>
+    </h:form>
+
+    <p:sidebar widgetVar="left-menu" baseZIndex="10000">
+        <h:form>
+            <p:menu style="border: none">
+                <p:submenu label="Настройка">
+                    <p:menuitem value="Производители" outcome="/data/vendor"/>
+                    <p:menuitem value="Модели" outcome="/data/model"/>
+                    <p:menuitem value="Регионы" outcome="/data/region"/>
+                </p:submenu>
+                <p:submenu label="Данные">
+                    <p:menuitem value="Оборудование"/>
+                    <p:menuitem value="Шаблоны"/>
+                </p:submenu>
+                <p:submenu label="Проверка">
+                    <p:menuitem value="По шаблону"/>
+                    <p:menuitem value="Командный вывод"/>
+                </p:submenu>
+            </p:menu>
+        </h:form>
+    </p:sidebar>
+
+    <div style="margin: 20px 10px 20px 10px">
+        <h:form id="buttons-form">
+            <ui:insert name="buttons"/>
+        </h:form>
+    </div>
+
+    <div style="margin: 5px 10px 5px 10px">
+        <h:form id="main-form">
+            <p:growl id="growl" globalOnly="true">
+                <p:autoUpdate />
+            </p:growl>
+            <ui:insert name="main"/>
+        </h:form>
+    </div>
+</h:body>
+</html>

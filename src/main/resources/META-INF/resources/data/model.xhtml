@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<ui:composition template="../templates/template.xhtml">
+    <f:metadata>
+        <f:view>
+            <f:viewAction action="#{modelController.init}"/>
+        </f:view>
+    </f:metadata>
+
+    <ui:define name="header">
+        <h:outputScript library="js" name="custom.js"/>
+    </ui:define>
+
+    <ui:define name="title">
+        Модели
+    </ui:define>
+
+    <ui:define name="buttons">
+        <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
+        <p:dialog header="Добавить модель" widgetVar="addDialog" modal="true" resizable="false" closeOnEscape="true">
+            <h:panelGrid columns="2" cellpadding="5">
+                <h:outputLabel for="vendor" value="Производитель:"/>
+                <p:selectOneMenu id="vendor" value="#{modelController.model.vendor}" required="true"
+                                 converter="omnifaces.SelectItemsConverter"
+                                 requiredMessage="Необходимо выбрать производителя">
+                    <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}"
+                                   itemValue="#{v}"/>
+                </p:selectOneMenu>
+
+                <h:outputLabel for="name" value="Наименование:"/>
+                <p:inputText id="name" value="#{modelController.model.name}"
+                             required="true" requiredMessage="Необходимо указать наименование"/>
+
+                <f:facet name="footer">
+                    <p:defaultCommand target="add"/>
+                    <p:commandButton id="add" value="Добавить" action="#{modelController.add}"
+                                     oncomplete="handleLoginRequest(xhr, status, args)"
+                                     update="main-form:modelTable name"/>
+                </f:facet>
+            </h:panelGrid>
+        </p:dialog>
+    </ui:define>
+
+    <ui:define name="main">
+        <p:dataTable id="modelTable" value="#{modelController.models}" var="m" widgetVar="modelTable"
+                     filteredValue="#{modelController.filteredModels}"
+                     editable="true" editMode="cell"
+                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                     currentPageReportTemplate="Всего {totalRecords}"
+                     rowsPerPageTemplate="5,10,20,50,100,200"
+                     rowIndexVar="row" emptyMessage="Нет записей">
+            <p:ajax event="cellEdit" listener="#{modelController.onCellEdit}"/>
+
+            <p:column headerText="№" width="5%" style="text-align: center">
+                #{row+1}
+            </p:column>
+            <p:column headerText="Производитель" sortBy="#{m.vendor.name}"
+                      filterBy="#{m.vendor.name}" filterMatchMode="in">
+                <f:facet name="filter">
+                    <p:selectCheckboxMenu label="Выберите производителей из списка" onchange="PF('modelTable').filter()"
+                                          style="width: 100%; box-sizing: border-box;">
+                        <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}"
+                                       itemValue="#{v.name}"/>
+                    </p:selectCheckboxMenu>
+                </f:facet>
+
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{m.vendor.name}"/></f:facet>
+                    <f:facet name="input">
+                        <p:selectOneMenu value="#{m.vendor}" converter="omnifaces.SelectItemsConverter" style="width:96%"
+                                         required="true" requiredMessage="Необходимо выбрать производителя">
+                            <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}" itemValue="#{v}"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Наименование" sortBy="#{m.name}" filterBy="#{m.name}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{m.name}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{m.name}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column width="5%" style="text-align: center">
+                <p:commandLink actionListener="#{modelController.remove(m)}" update="modelTable">
+                    <p:confirm header="Удалить" message="Вы действительно хотите удалить Модель?"
+                               icon="fa fa-warning"/>
+                    <i class="fa fa-remove"></i>
+                </p:commandLink>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+                </p:confirmDialog>
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>
+</html>
