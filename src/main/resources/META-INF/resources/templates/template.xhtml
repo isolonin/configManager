@@ -28,13 +28,12 @@
     <p:sidebar widgetVar="left-menu" baseZIndex="10000">
         <h:form>
             <p:menu style="border: none">
-                <p:submenu label="Настройка">
+                <p:submenu label="Данные">
                     <p:menuitem value="Производители" outcome="/data/vendor"/>
                     <p:menuitem value="Модели" outcome="/data/model"/>
                     <p:menuitem value="Регионы" outcome="/data/region"/>
-                </p:submenu>
-                <p:submenu label="Данные">
-                    <p:menuitem value="Оборудование"/>
+                    <p:separator/>
+                    <p:menuitem value="Оборудование" outcome="/data/device"/>
                     <p:menuitem value="Шаблоны"/>
                 </p:submenu>
                 <p:submenu label="Проверка">
@@ -44,6 +43,10 @@
             </p:menu>
         </h:form>
     </p:sidebar>
+
+    <div>
+        <ui:insert name="navigation"/>
+    </div>
 
     <div style="margin: 20px 10px 20px 10px">
         <h:form id="buttons-form">

@@ -58,8 +58,9 @@
                     <f:facet name="input"><p:inputText value="#{r.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column width="5%" style="text-align: center">
-                <p:commandLink actionListener="#{regionController.remove(r)}" update="regionTable">
+            <p:column width="5%" style="text-align: center" headerText="Удалить">
+                <p:commandLink actionListener="#{regionController.remove(r)}" update="regionTable"
+                               disabled="#{not empty r.devices}">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Регион?" icon="fa fa-warning"/>
                     <i class="fa fa-remove"></i>
                 </p:commandLink>

@@ -2,7 +2,6 @@ package i.solonin.configmanager.controller;
 
 import i.solonin.configmanager.model.DBEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.primefaces.PrimeFaces;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +12,6 @@ import java.util.List;
 @Service
 @Slf4j
 public abstract class AbstractController {
-
     void showInfoMessage(String message) {
         showMessage(message, FacesMessage.SEVERITY_INFO);
     }
@@ -24,6 +22,15 @@ public abstract class AbstractController {
 
     void showErrorMessage(String message) {
         showMessage(message, FacesMessage.SEVERITY_ERROR);
+    }
+
+    void redirect(String path) {
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect(path);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            showErrorMessage(e.getMessage());
+        }
     }
 
     private void showMessage(String message, FacesMessage.Severity severity) {

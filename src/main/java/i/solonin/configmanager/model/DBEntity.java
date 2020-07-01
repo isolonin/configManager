@@ -20,13 +20,17 @@ public class DBEntity {
     protected Date createAt;
     protected Date updateAt;
 
+    public boolean isNew() {
+        return id == null;
+    }
+
     @PrePersist
-    public void setCreatedDate(){
+    public void setCreatedDate() {
         this.createAt = new Date();
     }
 
     @PreUpdate
-    public void setUpdateDate(){
+    public void setUpdateDate() {
         this.updateAt = new Date();
     }
 

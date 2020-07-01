@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+<ui:composition template="../templates/template.xhtml">
+    <f:metadata>
+        <f:view>
+            <f:viewAction action="#{importDevicesController.init}"/>
+        </f:view>
+    </f:metadata>
+
+    <ui:define name="header">
+        <h:outputScript library="js" name="custom.js"/>
+    </ui:define>
+
+    <ui:define name="title">
+        Импорт устройств из файла #{importDevicesController.fileName}
+    </ui:define>
+
+    <ui:define name="navigation">
+        <p:breadCrumb>
+            <p:menuitem value="Оборудование" outcome="/data/device"/>
+            <p:menuitem value="Оборудование" outcome="/data/device"/>
+        </p:breadCrumb>
+    </ui:define>
+
+    <ui:define name="buttons">
+        <p:commandButton value="Применить" immediate="true" id="import"
+                         actionListener="#{importDevicesController.importDevices}"
+                         disabled="#{empty importDevicesController.selectedDevices}">
+            <p:confirm header="Импортировать" message="Вы действительно хотите импортировать выбранные устройства?"
+                       icon="fa fa-warning"/>
+        </p:commandButton>
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+            <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+        </p:confirmDialog>
+
+        <c:set var="newCount" value="#{importDevicesController.newCount}"/>
+        <c:set var="removeCount" value="#{importDevicesController.removeCount}"/>
+        <c:set var="modityCount" value="#{importDevicesController.modityCount}"/>
+        <p:outputLabel id="summary">
+            #{newCount > 0 ? 'Добавить '.concat(newCount) : ''}
+            #{removeCount > 0 ? 'Удалить '.concat(removeCount) : ''}
+            #{modityCount > 0 ? 'Корректировать '.concat(modityCount) : ''}
+        </p:outputLabel>
+    </ui:define>
+
+    <ui:define name="main">
+        <p:dataTable id="deviceTable" widgetVar="deviceTable" value="#{importDevicesController.devices}" var="d"
+                     selection="#{importDevicesController.selectedDevices}" rowKey="#{d.host}"
+                     disabledSelection="#{d.importType == 'EQUALS'}"
+                     filteredValue="#{importDevicesController.filteredDevices}"
+                     paginator="true" rows="50" paginatorAlwaysVisible="false"
+                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                     currentPageReportTemplate="Всего {totalRecords}"
+                     rowsPerPageTemplate="50,100,500"
+                     rowIndexVar="row" emptyMessage="Нет записей">
+
+            <p:ajax event="rowSelectCheckbox" update="buttons-form"/>
+            <p:ajax event="rowUnselectCheckbox" update="buttons-form"/>
+            <p:ajax event="toggleSelect" update="buttons-form"/>
+
+            <p:column selectionMode="multiple" style="width:16px;text-align:center" />
+            <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
+                <h:outputText value="#{d.name}"/>
+            </p:column>
+            <p:column headerText="Хост" sortBy="#{d.host}" filterBy="#{d.host}" filterMatchMode="contains">
+                <h:outputText value="#{d.host}"/>
+            </p:column>
+            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}"
+                      filterMatchMode="contains">
+                <h:outputText value="#{d.model.fullName}"/>
+            </p:column>
+            <p:column headerText="Регион" sortBy="#{d.region.name}" filterBy="#{d.region.name}"
+                      filterMatchMode="contains">
+                <h:outputText value="#{d.region.name}"/>
+            </p:column>
+            <p:column headerText="Местонахождение" sortBy="#{d.location}" filterBy="#{d.location}"
+                      filterMatchMode="contains">
+                <small>#{d.location}</small>
+            </p:column>
+            <p:column headerText="Firm Revision" sortBy="#{d.firmRevision}" filterBy="#{d.firmRevision}"
+                      filterMatchMode="contains">
+                <h:outputText value="#{d.firmRevision}"/>
+            </p:column>
+            <p:column headerText="Firmware" sortBy="#{d.firmware}" filterBy="#{d.firmware}" filterMatchMode="contains">
+                <h:outputText value="#{d.firmware}"/>
+            </p:column>
+            <p:column headerText="Действие" sortBy="#{d.importType.name}" filterBy="#{d.importType.name}" filterMatchMode="in">
+                <f:facet name="filter">
+                    <p:selectCheckboxMenu label="Выберите" onchange="PF('deviceTable').filter()"
+                                          style="width: 100%; box-sizing: border-box;">
+                        <f:selectItem itemValue="Добавить" itemLabel="Добавить"/>
+                        <f:selectItem itemValue="Удалить" itemLabel="Удалить"/>
+                        <f:selectItem itemValue="Корректировать" itemLabel="Корректировать"/>
+                        <f:selectItem itemValue="Без изменений" itemLabel="Без изменений"/>
+                    </p:selectCheckboxMenu>
+                </f:facet>
+                <h:outputText value="#{d.importType.name}"/>
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>
+</html>

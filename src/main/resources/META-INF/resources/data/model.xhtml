@@ -26,7 +26,7 @@
             <h:panelGrid columns="2" cellpadding="5">
                 <h:outputLabel for="vendor" value="Производитель:"/>
                 <p:selectOneMenu id="vendor" value="#{modelController.model.vendor}" required="true"
-                                 converter="omnifaces.SelectItemsConverter"
+                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
                                  requiredMessage="Необходимо выбрать производителя">
                     <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}"
                                    itemValue="#{v}"/>
@@ -61,9 +61,10 @@
                 #{row+1}
             </p:column>
             <p:column headerText="Производитель" sortBy="#{m.vendor.name}"
-                      filterBy="#{m.vendor.name}" filterMatchMode="in">
+                      filterBy="#{m.vendor.name}" filterMatchMode="in" width="30%">
                 <f:facet name="filter">
                     <p:selectCheckboxMenu label="Выберите производителей из списка" onchange="PF('modelTable').filter()"
+                                          filter="true" filterMatchMode="contains"
                                           style="width: 100%; box-sizing: border-box;">
                         <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}"
                                        itemValue="#{v.name}"/>
@@ -86,8 +87,9 @@
                     <f:facet name="input"><p:inputText value="#{m.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column width="5%" style="text-align: center">
-                <p:commandLink actionListener="#{modelController.remove(m)}" update="modelTable">
+            <p:column width="5%" style="text-align: center" headerText="Удалить">
+                <p:commandLink actionListener="#{modelController.remove(m)}" update="modelTable"
+                               disabled="#{not empty m.devices}">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Модель?"
                                icon="fa fa-warning"/>
                     <i class="fa fa-remove"></i>

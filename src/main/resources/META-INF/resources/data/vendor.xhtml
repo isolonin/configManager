@@ -54,15 +54,16 @@
             </p:column>
             <p:column headerText="Наименование" sortBy="#{v.name}" filterBy="#{v.name}" filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{v.name}" /></f:facet>
+                    <f:facet name="output"><h:outputText value="#{v.name}"/></f:facet>
                     <f:facet name="input"><p:inputText value="#{v.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column width="5%" style="text-align: center">
-                <p:commandLink actionListener="#{vendorController.remove(v)}" update="vendorTable">
+            <p:column width="5%" style="text-align: center" headerText="Удалить">
+                <p:commandLink actionListener="#{vendorController.remove(v)}" update="vendorTable"
+                               disabled="#{not empty v.models}">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Производителя?"
                                icon="fa fa-warning"/>
-                    <i class="fa fa-remove"></i>
+                    <i class="fa fa-lg fa-remove"></i>
                 </p:commandLink>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>

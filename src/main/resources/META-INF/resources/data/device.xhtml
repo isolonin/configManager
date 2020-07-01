@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<ui:composition template="../templates/template.xhtml">
+    <f:metadata>
+        <f:view>
+            <f:viewAction action="#{deviceController.init}"/>
+        </f:view>
+    </f:metadata>
+
+    <ui:define name="header">
+        <h:outputScript library="js" name="custom.js"/>
+    </ui:define>
+
+    <ui:define name="title">
+        Оборудование
+    </ui:define>
+
+    <ui:define name="buttons">
+        <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
+        <p:fileUpload fileUploadListener="#{importDevicesController.uploadFile}" label="Импортировать из Excel"
+                      auto="true"
+                      accept=".xls,.xlsx"/>
+
+        <p:dialog header="Добавить устройство" widgetVar="addDialog" modal="true" resizable="false"
+                  closeOnEscape="true">
+            <h:panelGrid columns="2" cellpadding="5" id="addPanel">
+                <h:outputLabel for="name" value="Наименование: *"/>
+                <p:inputText id="name" value="#{deviceController.device.name}" style="width: 100%"
+                             required="true" requiredMessage="Необходимо указать наименование"/>
+
+                <h:outputLabel for="host" value="Хост: *"/>
+                <p:inputText id="host" value="#{deviceController.device.host}"
+                             style="width: 100%" autocomplete="new-password"/>
+
+                <h:outputLabel for="login" value="Логин: *"/>
+                <p:inputText id="login" value="#{deviceController.device.login}" style="width: 100%"/>
+
+                <h:outputLabel for="password" value="Пароль: *"/>
+                <p:password id="password" value="#{deviceController.device.password}" style="width: 100%"
+                            autocomplete="new-password"/>
+
+                <h:outputLabel for="model" value="Модель: *"/>
+                <p:selectOneMenu id="model" value="#{deviceController.device.model}"
+                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
+                                 required="true" requiredMessage="Необходимо выбрать модель">
+                    <f:selectItems value="#{deviceController.models}" var="m" itemLabel="#{m.fullName}"
+                                   itemValue="#{m}"/>
+                </p:selectOneMenu>
+
+                <h:outputLabel for="region" value="Регион: *"/>
+                <p:selectOneMenu id="region" value="#{deviceController.device.region}" required="true"
+                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
+                                 requiredMessage="Необходимо выбрать регион">
+                    <f:selectItems value="#{deviceController.regions}" var="r" itemLabel="#{r.name}" itemValue="#{r}"/>
+                </p:selectOneMenu>
+
+                <h:outputLabel for="location" value="Местонахождение:"/>
+                <p:inputText id="location" value="#{deviceController.device.location}" style="width: 100%"/>
+
+                <h:outputLabel for="firmRevision" value="Firm Revision:"/>
+                <p:inputText id="firmRevision" value="#{deviceController.device.firmRevision}" style="width: 100%"/>
+
+                <h:outputLabel for="firmware" value="Firmware:"/>
+                <p:inputText id="firmware" value="#{deviceController.device.firmware}" style="width: 100%"/>
+
+
+                <f:facet name="footer">
+                    <p:defaultCommand target="add"/>
+                    <p:commandButton id="add" value="Добавить" action="#{deviceController.add}"
+                                     oncomplete="handleLoginRequest(xhr, status, args)"
+                                     validateClient="true" update="main-form:deviceTable addPanel"/>
+                </f:facet>
+            </h:panelGrid>
+        </p:dialog>
+    </ui:define>
+
+    <ui:define name="main">
+        <p:messages id="message" closable="true" forType=""/>
+        <p:dataTable id="deviceTable" value="#{deviceController.devices}" var="d" widgetVar="deviceTable"
+                     filteredValue="#{deviceController.filteredDevices}"
+                     editable="true"
+                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                     currentPageReportTemplate="Всего {totalRecords}"
+                     rowsPerPageTemplate="5,10,20,50,100,200"
+                     rowIndexVar="row" emptyMessage="Нет записей">
+            <p:ajax event="rowEdit" listener="#{deviceController.onRowEdit}" update="main-form:message"/>
+
+            <p:column headerText="№" width="5%" style="text-align: center">
+                #{row+1}
+            </p:column>
+            <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.name}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{d.name}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Хост" sortBy="#{d.host}" filterBy="#{d.host}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.host}"/></f:facet>
+                    <f:facet name="input">
+                        <p:inputText value="#{d.host}" style="width: 96%" autocomplete="new-password"/>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Логин" sortBy="#{d.login}" filterBy="#{d.login}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.login}"/></f:facet>
+                    <f:facet name="input">
+                        <p:inputText value="#{d.login}" style="width: 96%"/>
+                        <p:password value="#{d.password}" style="width: 96%" placeholder="Тут можно задать новый пароль"
+                                    autocomplete="new-password"/>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}"
+                      filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.model.fullName}"/></f:facet>
+                    <f:facet name="input">
+                        <p:selectOneMenu value="#{d.model}"
+                                         converter="omnifaces.SelectItemsConverter" filter="true"
+                                         filterMatchMode="contains"
+                                         required="true" requiredMessage="Необходимо выбрать модель">
+                            <f:selectItems value="#{deviceController.models}" var="m" itemLabel="#{m.fullName}"
+                                           itemValue="#{m}"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Регион" sortBy="#{d.region.name}" filterBy="#{d.region.name}"
+                      filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.region.name}"/></f:facet>
+                    <f:facet name="input">
+                        <p:selectOneMenu value="#{d.region}" required="true" style="width: 96%"
+                                         converter="omnifaces.SelectItemsConverter" filter="true"
+                                         filterMatchMode="contains"
+                                         requiredMessage="Необходимо выбрать регион">
+                            <f:selectItems value="#{deviceController.regions}" var="r" itemLabel="#{r.name}"
+                                           itemValue="#{r}"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Местонахождение" sortBy="#{d.location}" filterBy="#{d.location}"
+                      filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.location}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{d.location}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Firm Revision" sortBy="#{d.firmRevision}" filterBy="#{d.firmRevision}"
+                      filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.firmRevision}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{d.firmRevision}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Firmware" sortBy="#{d.firmware}" filterBy="#{d.firmware}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{d.firmware}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{d.firmware}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+
+            <p:column width="5%" style="text-align: center">
+                <f:facet name="header">
+                    <i class="fa fa-pencil" title="Редактировать"></i>
+                </f:facet>
+                <p:rowEditor/>
+            </p:column>
+            <p:column width="5%" style="text-align: center" headerText="Удалить">
+                <p:commandLink actionListener="#{deviceController.remove(d)}" update="deviceTable">
+                    <p:confirm header="Удалить" message="Вы действительно хотите удалить Устройство?"
+                               icon="fa fa-warning"/>
+                    <i class="fa fa-remove"></i>
+                </p:commandLink>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+                </p:confirmDialog>
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>
+</html>
