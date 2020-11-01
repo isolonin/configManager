@@ -4,10 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +15,8 @@ import java.util.List;
 @Entity(name = "vendor")
 @Table(uniqueConstraints = {
         @UniqueConstraint(columnNames = {"name"})
+}, indexes = {
+        @Index(name = "idx_vendor_name", columnList = "name")
 })
 public class Vendor extends DBEntity {
     @NotNull

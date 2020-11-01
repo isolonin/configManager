@@ -37,20 +37,26 @@ public class ImportServiceImpl implements ImportService {
                     .filter(oldDevice -> newDevices.stream().noneMatch(oldDevice::equalsByHost))
                     .peek(d -> d.setImportType(Device.ImportType.REMOVE))
                     .collect(Collectors.toList()));
-            List<Device> modify = newDevices.stream().filter(newDevice -> oldDevices.stream().anyMatch(newDevice::equalsByHost))
+            result.addAll(newDevices.stream().filter(newDevice -> oldDevices.stream().anyMatch(newDevice::equalsByHost))
                     .peek(d -> {
                         d.setOriginDevice(oldDevices.stream().filter(d::equalsByHost).findFirst().orElse(null));
                         if (d.isEqualsToOrigin())
                             d.setImportType(Device.ImportType.EQUALS);
                         else
                             d.setImportType(Device.ImportType.MODIFY);
-                    }).collect(Collectors.toList());
-            modify.sort(Comparator.comparing(Device::getImportType));
-            result.addAll(modify);
+                    }).collect(Collectors.toList()));
             result.addAll(newDevices.stream()
                     .filter(newDevice -> oldDevices.stream().noneMatch(newDevice::equalsByHost))
                     .peek(d -> d.setImportType(Device.ImportType.NEW))
                     .collect(Collectors.toList()));
+            result.sort((o1, o2) -> {
+                if(o1.getImportType().equals(o2.getImportType())) return 0;
+                if (o1.getImportType().equals(Device.ImportType.REMOVE)) return -1;
+                if (o2.getImportType().equals(Device.ImportType.REMOVE)) return 1;
+                if (o1.getImportType().equals(Device.ImportType.EQUALS)) return 1;
+                if (o2.getImportType().equals(Device.ImportType.EQUALS)) return -1;
+                return o1.getImportType().compareTo(o2.getImportType());
+            });
         } catch (Exception ex) {
             log.error(ex.getMessage());
             throw new InvalidFormatException("Не удалось прочитать Excel файл");

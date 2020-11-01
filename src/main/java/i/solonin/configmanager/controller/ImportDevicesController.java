@@ -50,6 +50,8 @@ public class ImportDevicesController extends AbstractController implements Seria
     public void importDevices() {
         try {
             importService.importDevices(selectedDevices);
+            devices = null;
+            fileName = null;
             redirect("/data/device.xhtml");
         } catch (Exception e) {
             showErrorMessage(e.getMessage());

@@ -28,6 +28,10 @@
             <url>http://repository.primefaces.org</url>
             <layout>default</layout>
         </repository>
+        <repository>
+            <id>Jsch</id>
+            <url>http://jsch.sf.net/maven2/</url>
+        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -98,6 +102,12 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>4.1.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
         </dependency>
 
         <dependency>

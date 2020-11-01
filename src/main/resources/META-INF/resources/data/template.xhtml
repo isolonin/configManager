@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<ui:composition template="../templates/template.xhtml">
+    <f:metadata>
+        <f:view>
+            <f:viewAction action="#{templateController.init}"/>
+        </f:view>
+    </f:metadata>
+
+    <ui:define name="header">
+        <h:outputScript library="js" name="custom.js"/>
+        <h:outputStylesheet library="css" name="upload.css"/>
+    </ui:define>
+
+    <ui:define name="title">
+        Шаблоны
+    </ui:define>
+
+    <ui:define name="buttons">
+        <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
+        <p:dialog header="Добавить шаблон" widgetVar="addDialog" modal="true" resizable="false"
+                  closeOnEscape="true">
+            <h:panelGrid columns="2" cellpadding="5">
+                <h:outputLabel for="name" value="Наименование: *"/>
+                <p:inputText id="name" value="#{templateController.template.name}"
+                             required="true" requiredMessage="Необходимо указать наименование"/>
+
+                <h:outputLabel for="model" value="Модель: *"/>
+                <p:selectOneMenu id="model" value="#{templateController.template.model}"
+                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
+                                 required="true" requiredMessage="Необходимо выбрать модель">
+                    <f:selectItems value="#{templateController.models}" var="m" itemLabel="#{m.fullName}"
+                                   itemValue="#{m}"/>
+                </p:selectOneMenu>
+
+                <h:outputLabel for="file" value="Файл шаблона:"/>
+                <h:panelGrid id="file">
+                    <p:outputLabel id="fileName" value="#{templateController.template.fileName}"/>
+                    <p:fileUpload mode="advanced" fileUploadListener="#{templateController.uploadFile}" auto="true"
+                                  label="Выбрать файл" update="fileName"
+                                  required="true" requiredMessage="Необходимо загрузить файл шаблона"/>
+                </h:panelGrid>
+
+                <f:facet name="footer">
+                    <p:defaultCommand target="add"/>
+                    <p:commandButton id="add" value="Добавить" action="#{templateController.save}"
+                                     oncomplete="handleLoginRequest(xhr, status, args)"
+                                     update="main-form:templateTable name"/>
+                </f:facet>
+            </h:panelGrid>
+        </p:dialog>
+    </ui:define>
+
+    <ui:define name="main">
+        <p:dataTable id="templateTable" value="#{templateController.templates}" var="t" widgetVar="templateTable"
+                     filteredValue="#{templateController.filteredTemplates}"
+                     editable="true" editMode="cell"
+                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                     currentPageReportTemplate="Всего {totalRecords}"
+                     rowsPerPageTemplate="5,10,20,50,100,200"
+                     rowIndexVar="row" emptyMessage="Нет записей">
+            <p:ajax event="cellEdit" listener="#{templateController.onCellEdit}"/>
+
+            <p:column headerText="№" width="5%" style="text-align: center">
+                #{row+1}
+            </p:column>
+            <p:column headerText="Наименование" sortBy="#{t.name}" filterBy="#{t.name}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{t.name}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{t.name}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Модель" sortBy="#{t.model.fullName}" filterBy="#{t.model.fullName}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{t.model.fullName}"/></f:facet>
+                    <f:facet name="input">
+                        <p:selectOneMenu value="#{t.model}"
+                                         converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
+                                         required="true" requiredMessage="Необходимо выбрать модель">
+                            <f:selectItems value="#{templateController.models}" var="m" itemLabel="#{m.fullName}"
+                                           itemValue="#{m}"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Файл" sortBy="#{t.fileName}" filterBy="#{t.fileName}" filterMatchMode="contains">
+                <h:outputText value="#{t.fileName}"/>
+                <p:commandButton ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);"
+                                 icon="fa fa-download" style="margin-left: 10px" title="Загрузить файл шаблона">
+                    <p:fileDownload value="#{t.downloadFile}" />
+                </p:commandButton>
+            </p:column>
+
+            <p:column width="20" style="text-align: center">
+                <f:facet name="header">
+                    <i class="fa fa-lg fa-remove" title="Удалить"></i>
+                </f:facet>
+
+                <p:commandLink actionListener="#{templateController.remove(t)}" update="templateTable">
+                    <p:confirm header="Удалить" message="Вы действительно хотите удалить Шаблон?"
+                               icon="fa fa-warning"/>
+                    <i class="fa fa-lg fa-remove"></i>
+                </p:commandLink>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+                </p:confirmDialog>
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>
+</html>

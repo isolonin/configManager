@@ -65,7 +65,7 @@
             <p:ajax event="rowUnselectCheckbox" update="buttons-form"/>
             <p:ajax event="toggleSelect" update="buttons-form"/>
 
-            <p:column selectionMode="multiple" style="width:16px;text-align:center" />
+            <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
             <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
                 <h:outputText value="#{d.name}"/>
             </p:column>
@@ -91,7 +91,8 @@
             <p:column headerText="Firmware" sortBy="#{d.firmware}" filterBy="#{d.firmware}" filterMatchMode="contains">
                 <h:outputText value="#{d.firmware}"/>
             </p:column>
-            <p:column headerText="Действие" sortBy="#{d.importType.name}" filterBy="#{d.importType.name}" filterMatchMode="in">
+            <p:column headerText="Действие" sortBy="#{d.importType.name}" filterBy="#{d.importType.name}"
+                      filterMatchMode="in">
                 <f:facet name="filter">
                     <p:selectCheckboxMenu label="Выберите" onchange="PF('deviceTable').filter()"
                                           style="width: 100%; box-sizing: border-box;">

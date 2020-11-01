@@ -14,6 +14,8 @@ import java.util.List;
 @Entity(name = "model")
 @Table(uniqueConstraints = {
         @UniqueConstraint(columnNames = {"vendor_id", "name"})
+}, indexes = {
+        @Index(name = "idx_model_name", columnList = "name")
 })
 @NoArgsConstructor
 public class Model extends DBEntity {

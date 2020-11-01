@@ -14,6 +14,9 @@ import java.util.Optional;
 @Entity(name = "device")
 @Table(uniqueConstraints = {
         @UniqueConstraint(columnNames = {"host"})
+}, indexes = {
+        @Index(name = "idx_device_name", columnList = "name"),
+        @Index(name = "idx_device_host", columnList = "host")
 })
 @ToString(includeFieldNames = false)
 public class Device extends DBEntity {

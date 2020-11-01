@@ -1,0 +1,14 @@
+.ui-fileupload {
+    display: inline-block;
+    position: absolute;
+}
+
+.ui-fileupload .ui-fileupload-content {
+    display: none;
+}
+
+.ui-fileupload .ui-fileupload-buttonbar {
+    border: none;
+    background: none;
+    padding: 0;
+}

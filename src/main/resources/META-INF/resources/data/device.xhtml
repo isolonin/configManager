@@ -14,6 +14,7 @@
 
     <ui:define name="header">
         <h:outputScript library="js" name="custom.js"/>
+        <h:outputStylesheet library="css" name="upload.css"/>
     </ui:define>
 
     <ui:define name="title">
@@ -91,7 +92,7 @@
                      rowIndexVar="row" emptyMessage="Нет записей">
             <p:ajax event="rowEdit" listener="#{deviceController.onRowEdit}" update="main-form:message"/>
 
-            <p:column headerText="№" width="5%" style="text-align: center">
+            <p:column headerText="№" width="20" style="text-align: center">
                 #{row+1}
             </p:column>
             <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
@@ -100,7 +101,7 @@
                     <f:facet name="input"><p:inputText value="#{d.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Хост" sortBy="#{d.host}" filterBy="#{d.host}" filterMatchMode="contains">
+            <p:column headerText="Хост" width="150" sortBy="#{d.host}" filterBy="#{d.host}" filterMatchMode="contains">
                 <p:cellEditor>
                     <f:facet name="output"><h:outputText value="#{d.host}"/></f:facet>
                     <f:facet name="input">
@@ -118,7 +119,7 @@
                     </f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}"
+            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}" width="20%"
                       filterMatchMode="contains">
                 <p:cellEditor>
                     <f:facet name="output"><h:outputText value="#{d.model.fullName}"/></f:facet>
@@ -169,17 +170,20 @@
                 </p:cellEditor>
             </p:column>
 
-            <p:column width="5%" style="text-align: center">
+            <p:column width="20" style="text-align: center">
                 <f:facet name="header">
-                    <i class="fa fa-pencil" title="Редактировать"></i>
+                    <i class="fa fa-lg fa-pencil" title="Редактировать"></i>
                 </f:facet>
                 <p:rowEditor/>
             </p:column>
-            <p:column width="5%" style="text-align: center" headerText="Удалить">
+            <p:column width="20" style="text-align: center">
+                <f:facet name="header">
+                    <i class="fa fa-lg fa-remove" title="Удалить"></i>
+                </f:facet>
                 <p:commandLink actionListener="#{deviceController.remove(d)}" update="deviceTable">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Устройство?"
                                icon="fa fa-warning"/>
-                    <i class="fa fa-remove"></i>
+                    <i class="fa fa-lg fa-remove"></i>
                 </p:commandLink>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
