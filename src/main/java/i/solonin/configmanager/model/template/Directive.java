@@ -12,7 +12,7 @@ public abstract class Directive extends Line {
     Directive(int line, String text) {
         super(line);
         this.text = text;
-        this.pattern = Pattern.compile(text.replaceAll("\\$[^ ]*", "[^ ]*"));
+        this.pattern = Pattern.compile(text.replaceAll("\\$[^ ]*", "[^ ]*").replaceAll("[%(){}]",""));
     }
 
     public String getName() {

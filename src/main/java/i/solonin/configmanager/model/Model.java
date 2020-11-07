@@ -20,12 +20,14 @@ import java.util.List;
 @NoArgsConstructor
 public class Model extends DBEntity {
     @NotNull
-    @OneToOne
+    @ManyToOne
     private Vendor vendor;
     @NotNull
     private String name;
     @OneToMany(mappedBy = "model")
     private List<Device> devices = new ArrayList<>();
+    @ManyToOne
+    private Template template;
 
     public Model(@NotNull Vendor vendor, @NotNull String name) {
         this.vendor = vendor;

@@ -19,3 +19,16 @@ table .ui-widget-content .ui-state-highlight {
 tr .ui-widget-content .ui-state-hover {
     background: #1C1C1C;
 }
+
+td {
+    padding: 3px;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.danger {
+    background-color: #FFB9C2;
+}

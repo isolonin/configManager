@@ -24,7 +24,6 @@
     <ui:define name="navigation">
         <p:breadCrumb>
             <p:menuitem value="Оборудование" outcome="/data/device"/>
-            <p:menuitem value="Оборудование" outcome="/data/device"/>
         </p:breadCrumb>
     </ui:define>
 
@@ -51,9 +50,9 @@
     </ui:define>
 
     <ui:define name="main">
-        <p:dataTable id="deviceTable" widgetVar="deviceTable" value="#{importDevicesController.devices}" var="d"
-                     selection="#{importDevicesController.selectedDevices}" rowKey="#{d.host}"
-                     disabledSelection="#{d.importType == 'EQUALS'}"
+        <p:dataTable id="deviceTable" widgetVar="deviceTable" value="#{importDevicesController.devices}" var="c"
+                     selection="#{importDevicesController.selectedDevices}" rowKey="#{c.host}"
+                     disabledSelection="#{c.importType == 'EQUALS'}"
                      filteredValue="#{importDevicesController.filteredDevices}"
                      paginator="true" rows="50" paginatorAlwaysVisible="false"
                      paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
@@ -66,32 +65,32 @@
             <p:ajax event="toggleSelect" update="buttons-form"/>
 
             <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
-            <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
-                <h:outputText value="#{d.name}"/>
+            <p:column headerText="Наименование" sortBy="#{c.name}" filterBy="#{c.name}" filterMatchMode="contains">
+                <h:outputText value="#{c.name}"/>
             </p:column>
-            <p:column headerText="Хост" sortBy="#{d.host}" filterBy="#{d.host}" filterMatchMode="contains">
-                <h:outputText value="#{d.host}"/>
+            <p:column headerText="Хост" sortBy="#{c.host}" filterBy="#{c.host}" filterMatchMode="contains">
+                <h:outputText value="#{c.host}"/>
             </p:column>
-            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}"
+            <p:column headerText="Модель" sortBy="#{c.model.fullName}" filterBy="#{c.model.fullName}"
                       filterMatchMode="contains">
-                <h:outputText value="#{d.model.fullName}"/>
+                <h:outputText value="#{c.model.fullName}"/>
             </p:column>
-            <p:column headerText="Регион" sortBy="#{d.region.name}" filterBy="#{d.region.name}"
+            <p:column headerText="Регион" sortBy="#{c.region.name}" filterBy="#{c.region.name}"
                       filterMatchMode="contains">
-                <h:outputText value="#{d.region.name}"/>
+                <h:outputText value="#{c.region.name}"/>
             </p:column>
-            <p:column headerText="Местонахождение" sortBy="#{d.location}" filterBy="#{d.location}"
+            <p:column headerText="Местонахождение" sortBy="#{c.location}" filterBy="#{c.location}"
                       filterMatchMode="contains">
-                <small>#{d.location}</small>
+                <small>#{c.location}</small>
             </p:column>
-            <p:column headerText="Firm Revision" sortBy="#{d.firmRevision}" filterBy="#{d.firmRevision}"
+            <p:column headerText="Firm Revision" sortBy="#{c.firmRevision}" filterBy="#{c.firmRevision}"
                       filterMatchMode="contains">
-                <h:outputText value="#{d.firmRevision}"/>
+                <h:outputText value="#{c.firmRevision}"/>
             </p:column>
-            <p:column headerText="Firmware" sortBy="#{d.firmware}" filterBy="#{d.firmware}" filterMatchMode="contains">
-                <h:outputText value="#{d.firmware}"/>
+            <p:column headerText="Firmware" sortBy="#{c.firmware}" filterBy="#{c.firmware}" filterMatchMode="contains">
+                <h:outputText value="#{c.firmware}"/>
             </p:column>
-            <p:column headerText="Действие" sortBy="#{d.importType.name}" filterBy="#{d.importType.name}"
+            <p:column headerText="Действие" sortBy="#{c.importType.name}" filterBy="#{c.importType.name}"
                       filterMatchMode="in">
                 <f:facet name="filter">
                     <p:selectCheckboxMenu label="Выберите" onchange="PF('deviceTable').filter()"
@@ -102,7 +101,7 @@
                         <f:selectItem itemValue="Без изменений" itemLabel="Без изменений"/>
                     </p:selectCheckboxMenu>
                 </f:facet>
-                <h:outputText value="#{d.importType.name}"/>
+                <h:outputText value="#{c.importType.name}"/>
             </p:column>
         </p:dataTable>
     </ui:define>

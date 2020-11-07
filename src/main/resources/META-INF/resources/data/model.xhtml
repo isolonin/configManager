@@ -23,22 +23,28 @@
     <ui:define name="buttons">
         <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
         <p:dialog header="Добавить модель" widgetVar="addDialog" modal="true" resizable="false" closeOnEscape="true">
-            <h:panelGrid columns="2" cellpadding="5">
-                <h:outputLabel for="vendor" value="Производитель:"/>
-                <p:selectOneMenu id="vendor" value="#{modelController.model.vendor}" required="true"
+            <h:panelGrid columns="2" cellpadding="5" styleClass="ui-fluid">
+                <h:outputLabel for="vendor" value="Производитель: *"/>
+                <p:selectOneMenu id="vendor" value="#{modelController.model.vendor}"
                                  converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
-                                 requiredMessage="Необходимо выбрать производителя">
+                                 required="true" requiredMessage="Необходимо выбрать производителя">
                     <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}"
                                    itemValue="#{v}"/>
                 </p:selectOneMenu>
 
-                <h:outputLabel for="name" value="Наименование:"/>
+                <h:outputLabel for="name" value="Наименование: *"/>
                 <p:inputText id="name" value="#{modelController.model.name}"
                              required="true" requiredMessage="Необходимо указать наименование"/>
 
+                <h:outputLabel for="template" value="Шаблон:"/>
+                <p:selectOneMenu id="template" value="#{modelController.model.template}"
+                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains">
+                    <f:selectItems value="#{modelController.templates}" var="t" itemLabel="#{t.name}" itemValue="#{t}"/>
+                </p:selectOneMenu>
+
                 <f:facet name="footer">
                     <p:defaultCommand target="add"/>
-                    <p:commandButton id="add" value="Добавить" action="#{modelController.add}"
+                    <p:commandButton id="add" value="Добавить" action="#{modelController.save}"
                                      oncomplete="handleLoginRequest(xhr, status, args)"
                                      update="main-form:modelTable name"/>
                 </f:facet>
@@ -74,9 +80,11 @@
                 <p:cellEditor>
                     <f:facet name="output"><h:outputText value="#{m.vendor.name}"/></f:facet>
                     <f:facet name="input">
-                        <p:selectOneMenu value="#{m.vendor}" converter="omnifaces.SelectItemsConverter" style="width:96%"
+                        <p:selectOneMenu value="#{m.vendor}" converter="omnifaces.SelectItemsConverter"
+                                         style="width:96%"
                                          required="true" requiredMessage="Необходимо выбрать производителя">
-                            <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}" itemValue="#{v}"/>
+                            <f:selectItems value="#{modelController.vendors}" var="v" itemLabel="#{v.name}"
+                                           itemValue="#{v}"/>
                         </p:selectOneMenu>
                     </f:facet>
                 </p:cellEditor>
@@ -87,12 +95,25 @@
                     <f:facet name="input"><p:inputText value="#{m.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
+            <p:column headerText="Шаблон" sortBy="#{m.template.name}" filterBy="#{m.template.name}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{m.template.name}"/></f:facet>
+                    <f:facet name="input">
+                        <p:selectOneMenu value="#{m.template}" style="width:96%"
+                                         converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains">
+                            <f:selectItem value="#{null}" itemLabel="Ничего не выбрано"/>
+                            <f:selectItems value="#{modelController.templates}" var="t" itemLabel="#{t.name}" itemValue="#{t}"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+
             <p:column width="5%" style="text-align: center" headerText="Удалить">
                 <p:commandLink actionListener="#{modelController.remove(m)}" update="modelTable"
                                disabled="#{not empty m.devices}">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Модель?"
                                icon="fa fa-warning"/>
-                    <i class="fa fa-remove"></i>
+                    <i class="fa fa-lg fa-remove"> </i>
                 </p:commandLink>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>

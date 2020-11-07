@@ -31,7 +31,7 @@ public class RegionController extends AbstractController {
         regions = regionRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
-    public void add() {
+    public void save() {
         try {
             save(region);
         } catch (Exception ex) {

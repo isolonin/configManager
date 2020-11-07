@@ -1,12 +1,14 @@
 package i.solonin.configmanager.controller;
 
 import i.solonin.configmanager.model.Model;
+import i.solonin.configmanager.model.ShellCommand;
 import i.solonin.configmanager.model.Template;
 import i.solonin.configmanager.model.Vendor;
 import i.solonin.configmanager.service.repos.ModelRepository;
+import i.solonin.configmanager.service.repos.ShellCommandRepository;
 import i.solonin.configmanager.service.repos.TemplateRepository;
 import i.solonin.configmanager.service.repos.VendorRepository;
-import i.solonin.configmanager.service.repos.custom.TemplateRepositoryCustom;
+import i.solonin.configmanager.service.repos.custom.AbstractRepositoryCustom;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.primefaces.event.CellEditEvent;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
 
 import javax.faces.view.ViewScoped;
@@ -26,8 +29,11 @@ import java.util.List;
 @Slf4j
 @ViewScoped
 public class TemplateController extends AbstractController {
+    @Qualifier("templateRepositoryImpl")
     @Autowired
-    private TemplateRepositoryCustom templateRepositoryCustom;
+    private AbstractRepositoryCustom templateRepositoryCustom;
+    @Autowired
+    private ShellCommandRepository shellCommandRepository;
     @Autowired
     private TemplateRepository templateRepository;
     @Autowired
@@ -41,11 +47,13 @@ public class TemplateController extends AbstractController {
     private List<Template> templates;
     private List<Vendor> vendors;
     private List<Model> models;
+    private List<ShellCommand> shellCommands;
 
     public void init() {
         templates = templateRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
         vendors = vendorRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
         models = modelRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        shellCommands = shellCommandRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
     public void uploadFile(FileUploadEvent event) {
@@ -83,6 +91,11 @@ public class TemplateController extends AbstractController {
     }
 
     public void remove(Template template) {
+        template.getModels().forEach(m -> {
+            m.setTemplate(null);
+            modelRepository.save(m);
+        });
+        template.getModels().clear();
         remove(template, templates, filteredTemplates, templateRepository);
     }
 }

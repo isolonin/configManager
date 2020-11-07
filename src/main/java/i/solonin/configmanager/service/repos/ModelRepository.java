@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ModelRepository extends JpaRepository<Model, Long>, AbstractRepository<Model>, ModelRepositoryCustom {
-    boolean existsByNameAndVendor(String name, Vendor vendor);
+    Model findByNameAndVendor(String name, Vendor vendor);
 
     List<Model> findAllByNameIgnoreCase(String name);
 }

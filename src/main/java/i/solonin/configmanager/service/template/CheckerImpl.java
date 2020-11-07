@@ -1,5 +1,6 @@
 package i.solonin.configmanager.service.template;
 
+import i.solonin.configmanager.model.Template;
 import i.solonin.configmanager.model.template.Command;
 import i.solonin.configmanager.model.template.Directive;
 import lombok.extern.slf4j.Slf4j;
@@ -13,27 +14,45 @@ import java.util.List;
 @Service
 public class CheckerImpl implements Checker {
 
-//    public void diff(String template, List<String> sources) throws Exception {
-//        Path templatePath = Paths.get(template);
-//        if (!Files.exists(templatePath))
-//            throw new Exception("Template file not existed");
-//        if (!Files.isRegularFile(templatePath))
-//            throw new Exception(template + " is not regular file");
-//        List<File> sourceFiles = getSources(sources, template);
-//        if (sourceFiles.isEmpty())
-//            throw new Exception("Source files not found");
-//
-//        List<Command> templateCommands = getObject(templatePath);
-//        sourceFiles.forEach(f -> {
-//            String absolutePath = f.getAbsolutePath();
-//            List<Command> sourceCommands = getObject(Paths.get(absolutePath));
-//            List<String> warnings = diff(templateCommands, sourceCommands);
-//            if (!warnings.isEmpty()) {
-//                log.warn("{}:", absolutePath);
-//                warnings.forEach(log::warn);
-//            }
-//        });
-//    }
+    public void diff(Template template, List<String> deviceConfig) {
+        try {
+            List<Command> deviceCommands = getObject(deviceConfig);
+            List<Command> templateCommands = getObject(template.getConfig());
+            List<String> warnings = diff(templateCommands, deviceCommands);
+            if (!warnings.isEmpty()) {
+                log.warn("{}:", warnings);
+                warnings.forEach(log::warn);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private List<Command> getObject(List<String> deviceConfig) {
+        List<Command> result = new ArrayList<>();
+        try {
+            int line = 1;
+            Command last = null;
+            for (String string : deviceConfig) {
+                Command command = new Command(line, string);
+                if (string.matches("^[a-zA-Z].*") || string.matches("^\\s*sysname.*")) {
+                    result.add(command);
+                    last = command;
+                    continue;
+                }
+                if (string.matches("^\\s[a-zA-Z].*")) {
+                    if (last == null)
+                        result.add(command);
+                    else
+                        last.getDirectives().add(command);
+                }
+                line++;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return result;
+    }
 
     @Override
     public List<String> diff(List<Command> templateCommands, List<Command> sourceCommands) {

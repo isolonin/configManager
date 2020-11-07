@@ -27,6 +27,7 @@ public class DBEntity {
     @PrePersist
     public void setCreatedDate() {
         this.createAt = new Date();
+        this.updateAt = new Date();
     }
 
     @PreUpdate

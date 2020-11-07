@@ -24,13 +24,13 @@
         <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
         <p:dialog header="Добавить регион" widgetVar="addDialog" modal="true" resizable="false"
                   closeOnEscape="true">
-            <h:panelGrid columns="2" cellpadding="5">
+            <h:panelGrid columns="2" cellpadding="5" styleClass="ui-fluid">
                 <h:outputLabel for="name" value="Наименование:"/>
                 <p:inputText id="name" value="#{regionController.region.name}" required="true"
                              requiredMessage="Необходимо указать наименование"/>
                 <f:facet name="footer">
                     <p:defaultCommand target="addRegion"/>
-                    <p:commandButton id="addRegion" value="Добавить" action="#{regionController.add}"
+                    <p:commandButton id="addRegion" value="Добавить" action="#{regionController.save}"
                                      oncomplete="handleLoginRequest(xhr, status, args)"
                                      update="main-form:regionTable name"/>
                 </f:facet>
@@ -59,10 +59,9 @@
                 </p:cellEditor>
             </p:column>
             <p:column width="5%" style="text-align: center" headerText="Удалить">
-                <p:commandLink actionListener="#{regionController.remove(r)}" update="regionTable"
-                               disabled="#{not empty r.devices}">
+                <p:commandLink actionListener="#{regionController.remove(r)}" update="regionTable" disabled="#{not empty r.devices}">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Регион?" icon="fa fa-warning"/>
-                    <i class="fa fa-remove"></i>
+                    <i class="fa fa-lg fa-remove"> </i>
                 </p:commandLink>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>

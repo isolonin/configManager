@@ -29,7 +29,7 @@
 
         <p:dialog header="Добавить устройство" widgetVar="addDialog" modal="true" resizable="false"
                   closeOnEscape="true">
-            <h:panelGrid columns="2" cellpadding="5" id="addPanel">
+            <h:panelGrid columns="2" cellpadding="5" id="addPanel" styleClass="ui-fluid">
                 <h:outputLabel for="name" value="Наименование: *"/>
                 <p:inputText id="name" value="#{deviceController.device.name}" style="width: 100%"
                              required="true" requiredMessage="Необходимо указать наименование"/>
@@ -53,10 +53,9 @@
                                    itemValue="#{m}"/>
                 </p:selectOneMenu>
 
-                <h:outputLabel for="region" value="Регион: *"/>
-                <p:selectOneMenu id="region" value="#{deviceController.device.region}" required="true"
-                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
-                                 requiredMessage="Необходимо выбрать регион">
+                <h:outputLabel for="region" value="Регион: "/>
+                <p:selectOneMenu id="region" value="#{deviceController.device.region}"
+                                 converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains">
                     <f:selectItems value="#{deviceController.regions}" var="r" itemLabel="#{r.name}" itemValue="#{r}"/>
                 </p:selectOneMenu>
 
@@ -72,7 +71,7 @@
 
                 <f:facet name="footer">
                     <p:defaultCommand target="add"/>
-                    <p:commandButton id="add" value="Добавить" action="#{deviceController.add}"
+                    <p:commandButton id="add" value="Добавить" action="#{deviceController.save}"
                                      oncomplete="handleLoginRequest(xhr, status, args)"
                                      validateClient="true" update="main-form:deviceTable addPanel"/>
                 </f:facet>
@@ -82,7 +81,7 @@
 
     <ui:define name="main">
         <p:messages id="message" closable="true" forType=""/>
-        <p:dataTable id="deviceTable" value="#{deviceController.devices}" var="d" widgetVar="deviceTable"
+        <p:dataTable id="deviceTable" value="#{deviceController.devices}" var="c" widgetVar="deviceTable"
                      filteredValue="#{deviceController.filteredDevices}"
                      editable="true"
                      paginator="true" rows="10" paginatorAlwaysVisible="false"
@@ -95,36 +94,36 @@
             <p:column headerText="№" width="20" style="text-align: center">
                 #{row+1}
             </p:column>
-            <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
+            <p:column headerText="Наименование" sortBy="#{c.name}" filterBy="#{c.name}" filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.name}"/></f:facet>
-                    <f:facet name="input"><p:inputText value="#{d.name}" style="width:96%"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.name}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{c.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Хост" width="150" sortBy="#{d.host}" filterBy="#{d.host}" filterMatchMode="contains">
+            <p:column headerText="Хост" width="150" sortBy="#{c.host}" filterBy="#{c.host}" filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.host}"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.host}"/></f:facet>
                     <f:facet name="input">
-                        <p:inputText value="#{d.host}" style="width: 96%" autocomplete="new-password"/>
+                        <p:inputText value="#{c.host}" style="width: 96%" autocomplete="new-password"/>
                     </f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Логин" sortBy="#{d.login}" filterBy="#{d.login}" filterMatchMode="contains">
+            <p:column headerText="Логин" sortBy="#{c.login}" filterBy="#{c.login}" filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.login}"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.login}"/></f:facet>
                     <f:facet name="input">
-                        <p:inputText value="#{d.login}" style="width: 96%"/>
-                        <p:password value="#{d.password}" style="width: 96%" placeholder="Тут можно задать новый пароль"
+                        <p:inputText value="#{c.login}" style="width: 96%"/>
+                        <p:password value="#{c.password}" style="width: 96%" placeholder="Тут можно задать новый пароль"
                                     autocomplete="new-password"/>
                     </f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}" width="20%"
+            <p:column headerText="Модель" sortBy="#{c.model.fullName}" filterBy="#{c.model.fullName}" width="20%"
                       filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.model.fullName}"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.model.fullName}"/></f:facet>
                     <f:facet name="input">
-                        <p:selectOneMenu value="#{d.model}"
+                        <p:selectOneMenu value="#{c.model}"
                                          converter="omnifaces.SelectItemsConverter" filter="true"
                                          filterMatchMode="contains"
                                          required="true" requiredMessage="Необходимо выбрать модель">
@@ -134,12 +133,12 @@
                     </f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Регион" sortBy="#{d.region.name}" filterBy="#{d.region.name}"
+            <p:column headerText="Регион" sortBy="#{c.region.name}" filterBy="#{c.region.name}"
                       filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.region.name}"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.region.name}"/></f:facet>
                     <f:facet name="input">
-                        <p:selectOneMenu value="#{d.region}" required="true" style="width: 96%"
+                        <p:selectOneMenu value="#{c.region}" required="true" style="width: 96%"
                                          converter="omnifaces.SelectItemsConverter" filter="true"
                                          filterMatchMode="contains"
                                          requiredMessage="Необходимо выбрать регион">
@@ -149,41 +148,41 @@
                     </f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Местонахождение" sortBy="#{d.location}" filterBy="#{d.location}"
+            <p:column headerText="Местонахождение" sortBy="#{c.location}" filterBy="#{c.location}"
                       filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.location}"/></f:facet>
-                    <f:facet name="input"><p:inputText value="#{d.location}" style="width:96%"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.location}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{c.location}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Firm Revision" sortBy="#{d.firmRevision}" filterBy="#{d.firmRevision}"
+            <p:column headerText="Firm Revision" sortBy="#{c.firmRevision}" filterBy="#{c.firmRevision}"
                       filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.firmRevision}"/></f:facet>
-                    <f:facet name="input"><p:inputText value="#{d.firmRevision}" style="width:96%"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.firmRevision}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{c.firmRevision}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Firmware" sortBy="#{d.firmware}" filterBy="#{d.firmware}" filterMatchMode="contains">
+            <p:column headerText="Firmware" sortBy="#{c.firmware}" filterBy="#{c.firmware}" filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{d.firmware}"/></f:facet>
-                    <f:facet name="input"><p:inputText value="#{d.firmware}" style="width:96%"/></f:facet>
+                    <f:facet name="output"><h:outputText value="#{c.firmware}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{c.firmware}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
 
-            <p:column width="20" style="text-align: center">
+            <p:column width="30" style="text-align: center">
                 <f:facet name="header">
-                    <i class="fa fa-lg fa-pencil" title="Редактировать"></i>
+                    <i class="fa fa-lg fa-pencil" title="Редактировать"> </i>
                 </f:facet>
                 <p:rowEditor/>
             </p:column>
-            <p:column width="20" style="text-align: center">
+            <p:column width="30" style="text-align: center">
                 <f:facet name="header">
-                    <i class="fa fa-lg fa-remove" title="Удалить"></i>
+                    <i class="fa fa-lg fa-remove" title="Удалить"> </i>
                 </f:facet>
-                <p:commandLink actionListener="#{deviceController.remove(d)}" update="deviceTable">
+                <p:commandLink actionListener="#{deviceController.remove(c)}" update="deviceTable">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Устройство?"
                                icon="fa fa-warning"/>
-                    <i class="fa fa-lg fa-remove"></i>
+                    <i class="fa fa-lg fa-remove"> </i>
                 </p:commandLink>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>

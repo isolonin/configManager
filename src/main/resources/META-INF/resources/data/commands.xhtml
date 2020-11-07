@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<ui:composition template="../templates/template.xhtml">
+    <f:metadata>
+        <f:view>
+            <f:viewAction action="#{shellCommandsController.init}"/>
+        </f:view>
+    </f:metadata>
+
+    <ui:define name="header">
+        <h:outputScript library="js" name="custom.js"/>
+        <h:outputStylesheet library="css" name="upload.css"/>
+    </ui:define>
+
+    <ui:define name="title">
+        Команды
+    </ui:define>
+
+    <ui:define name="buttons">
+        <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
+
+        <p:dialog header="Добавить команду" widgetVar="addDialog" modal="true" resizable="false"
+                  closeOnEscape="true">
+            <h:panelGrid columns="2" cellpadding="5" id="addPanel" styleClass="ui-fluid">
+                <h:outputLabel for="name" value="Наименование: *"/>
+                <p:inputText id="name" value="#{shellCommandsController.shellCommand.name}" style="width: 100%"
+                             required="true" requiredMessage="Необходимо указать команду"/>
+
+                <h:outputLabel for="command" value="Команда: *"/>
+                <p:inputText id="command" value="#{shellCommandsController.shellCommand.command}"
+                             style="width: 100%" autocomplete="new-password"/>
+
+                <f:facet name="footer">
+                    <p:defaultCommand target="add"/>
+                    <p:commandButton id="add" value="Добавить" action="#{shellCommandsController.save}"
+                                     oncomplete="handleLoginRequest(xhr, status, args)"
+                                     validateClient="true" update="main-form:commandsTable addPanel"/>
+                </f:facet>
+            </h:panelGrid>
+        </p:dialog>
+    </ui:define>
+
+    <ui:define name="main">
+        <p:messages id="message" closable="true" forType=""/>
+        <p:dataTable id="commandsTable" value="#{shellCommandsController.shellCommands}" var="c" widgetVar="commandsTable"
+                     filteredValue="#{shellCommandsController.filteredShellCommands}"
+                     editable="true"
+                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                     currentPageReportTemplate="Всего {totalRecords}"
+                     rowsPerPageTemplate="5,10,20,50,100,200"
+                     rowIndexVar="row" emptyMessage="Нет записей">
+            <p:ajax event="rowEdit" listener="#{shellCommandsController.onRowEdit}" update="main-form:message"/>
+
+            <p:column headerText="№" width="20" style="text-align: center">
+                #{row+1}
+            </p:column>
+            <p:column headerText="Команда" sortBy="#{c.name}" filterBy="#{c.name}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{c.name}"/></f:facet>
+                    <f:facet name="input"><p:inputText value="#{c.name}" style="width:96%"/></f:facet>
+                </p:cellEditor>
+            </p:column>
+            <p:column headerText="Коментарий" sortBy="#{c.command}" filterBy="#{c.command}" filterMatchMode="contains">
+                <p:cellEditor>
+                    <f:facet name="output"><h:outputText value="#{c.command}"/></f:facet>
+                    <f:facet name="input">
+                        <p:inputText value="#{c.command}" style="width: 96%" autocomplete="new-password"/>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+
+            <p:column width="30" style="text-align: center">
+                <f:facet name="header">
+                    <i class="fa fa-lg fa-pencil" title="Редактировать"> </i>
+                </f:facet>
+                <p:rowEditor/>
+            </p:column>
+            <p:column width="30" style="text-align: center">
+                <f:facet name="header">
+                    <i class="fa fa-lg fa-remove" title="Удалить"> </i>
+                </f:facet>
+                <p:commandLink actionListener="#{shellCommandsController.remove(c)}" update="commandsTable">
+                    <p:confirm header="Удалить" message="Вы действительно хотите удалить Команду?"
+                               icon="fa fa-warning"/>
+                    <i class="fa fa-lg fa-remove"> </i>
+                </p:commandLink>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+                </p:confirmDialog>
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>
+</html>

@@ -3,9 +3,12 @@ package i.solonin.configmanager.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -38,10 +41,15 @@ public class Device extends DBEntity {
     private String firmRevision;
     private String firmware;
 
+    @OneToMany
+    private List<Check> checks = new ArrayList<>();
+
     @Transient
     private ImportType importType;
     @Transient
     private Device originDevice;
+    @Transient
+    private boolean isCheckingNow;
 
     public void restoreFrom(Device other) {
         this.name = other.getName();
@@ -52,6 +60,11 @@ public class Device extends DBEntity {
         this.location = other.getLocation();
         this.firmRevision = other.getFirmRevision();
         this.firmware = other.getFirmware();
+    }
+
+    public boolean isEnoughForCheck() {
+        return !StringUtils.isEmpty(login) && !StringUtils.isEmpty(password) &&
+                Optional.ofNullable(model).map(m -> m.getTemplate() != null).orElse(false);
     }
 
     public boolean equalsByHost(Device other) {
@@ -77,14 +90,14 @@ public class Device extends DBEntity {
         return false;
     }
 
-    public static enum ImportType {
+    public enum ImportType {
         NEW("Добавить"),
         REMOVE("Удалить"),
         MODIFY("Корректировать"),
         EQUALS("Без изменений");
 
         @Getter
-        private String name;
+        private final String name;
 
         ImportType(String name) {
             this.name = name;

@@ -1,8 +1,10 @@
 package i.solonin.configmanager.controller;
 
 import i.solonin.configmanager.model.Model;
+import i.solonin.configmanager.model.Template;
 import i.solonin.configmanager.model.Vendor;
 import i.solonin.configmanager.service.repos.ModelRepository;
+import i.solonin.configmanager.service.repos.TemplateRepository;
 import i.solonin.configmanager.service.repos.VendorRepository;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Named("modelController")
@@ -25,19 +28,23 @@ public class ModelController extends AbstractController {
     private ModelRepository modelRepository;
     @Autowired
     private VendorRepository vendorRepository;
+    @Autowired
+    private TemplateRepository templateRepository;
 
     private Model model = new Model();
     private List<Model> models;
     @Setter
     private List<Model> filteredModels;
     private List<Vendor> vendors;
+    private List<Template> templates;
 
     public void init() {
         models = modelRepository.findAll(Sort.by(Sort.Direction.ASC, "vendor.name", "name"));
         vendors = vendorRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        templates = templateRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
-    public void add() {
+    public void save() {
         try {
             save(model);
         } catch (Exception ex) {
@@ -48,7 +55,8 @@ public class ModelController extends AbstractController {
     }
 
     private boolean save(Model model) {
-        if (modelRepository.existsByNameAndVendor(model.getName(), model.getVendor())) {
+        Model oldModel = modelRepository.findByNameAndVendor(model.getName(), model.getVendor());
+        if (Optional.ofNullable(oldModel).filter(m -> !m.equals(model)).isPresent()) {
             showWarnMessage("Модель с таким наименованием уже существует");
             PrimeFaces.current().ajax().addCallbackParam("failed", true);
             return false;

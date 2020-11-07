@@ -30,14 +30,15 @@
             <p:menu style="border: none">
                 <p:submenu label="Данные">
                     <p:menuitem value="Производители" outcome="/data/vendor"/>
+                    <p:menuitem value="Команды" outcome="/data/commands"/>
+                    <p:menuitem value="Шаблоны" outcome="/data/template"/>
                     <p:menuitem value="Модели" outcome="/data/model"/>
                     <p:menuitem value="Регионы" outcome="/data/region"/>
                     <p:separator/>
                     <p:menuitem value="Оборудование" outcome="/data/device"/>
-                    <p:menuitem value="Шаблоны" outcome="/data/template"/>
                 </p:submenu>
                 <p:submenu label="Проверка">
-                    <p:menuitem value="По шаблону"/>
+                    <p:menuitem value="По шаблону" outcome="/check/template"/>
                     <p:menuitem value="Командный вывод"/>
                 </p:submenu>
             </p:menu>

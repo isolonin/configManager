@@ -25,26 +25,27 @@
         <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
         <p:dialog header="Добавить шаблон" widgetVar="addDialog" modal="true" resizable="false"
                   closeOnEscape="true">
-            <h:panelGrid columns="2" cellpadding="5">
+            <h:panelGrid columns="2" cellpadding="5" styleClass="ui-fluid">
                 <h:outputLabel for="name" value="Наименование: *"/>
                 <p:inputText id="name" value="#{templateController.template.name}"
                              required="true" requiredMessage="Необходимо указать наименование"/>
 
-                <h:outputLabel for="model" value="Модель: *"/>
-                <p:selectOneMenu id="model" value="#{templateController.template.model}"
+                <h:outputLabel for="command" value="Команда просмотра конфигурации: *"/>
+                <p:selectOneMenu id="command" value="#{templateController.template.showConfigCommand}"
                                  converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
-                                 required="true" requiredMessage="Необходимо выбрать модель">
-                    <f:selectItems value="#{templateController.models}" var="m" itemLabel="#{m.fullName}"
-                                   itemValue="#{m}"/>
+                                 required="true" requiredMessage="Необходимо выбрать команду">
+                    <f:selectItems value="#{templateController.shellCommands}" var="c" itemLabel="#{c.name}"
+                                   itemValue="#{c}"/>
                 </p:selectOneMenu>
 
                 <h:outputLabel for="file" value="Файл шаблона:"/>
-                <h:panelGrid id="file">
+                <p:panelGrid id="file">
                     <p:outputLabel id="fileName" value="#{templateController.template.fileName}"/>
                     <p:fileUpload mode="advanced" fileUploadListener="#{templateController.uploadFile}" auto="true"
-                                  label="Выбрать файл" update="fileName"
+                                  label="Выбрать файл" update="fileName" style="position: inherit" accept=".cfg,.conf"
+                                  validatorMessage="Необходимо загрузить файл шаблона"
                                   required="true" requiredMessage="Необходимо загрузить файл шаблона"/>
-                </h:panelGrid>
+                </p:panelGrid>
 
                 <f:facet name="footer">
                     <p:defaultCommand target="add"/>
@@ -76,15 +77,21 @@
                     <f:facet name="input"><p:inputText value="#{t.name}" style="width:96%"/></f:facet>
                 </p:cellEditor>
             </p:column>
-            <p:column headerText="Модель" sortBy="#{t.model.fullName}" filterBy="#{t.model.fullName}" filterMatchMode="contains">
+            <p:column headerText="Команда" sortBy="#{t.showConfigCommand.name}" filterBy="#{t.showConfigCommand.name}"
+                      filterMatchMode="contains">
                 <p:cellEditor>
-                    <f:facet name="output"><h:outputText value="#{t.model.fullName}"/></f:facet>
+                    <f:facet name="output">
+                        <h:outputText value="#{t.showConfigCommand.name}"/>
+                        <br/>
+                        <small><h:outputText value="#{t.showConfigCommand.command}"/></small>
+                    </f:facet>
                     <f:facet name="input">
-                        <p:selectOneMenu value="#{t.model}"
-                                         converter="omnifaces.SelectItemsConverter" filter="true" filterMatchMode="contains"
+                        <p:selectOneMenu value="#{t.showConfigCommand}"
+                                         converter="omnifaces.SelectItemsConverter" filter="true"
+                                         filterMatchMode="contains"
                                          required="true" requiredMessage="Необходимо выбрать модель">
-                            <f:selectItems value="#{templateController.models}" var="m" itemLabel="#{m.fullName}"
-                                           itemValue="#{m}"/>
+                            <f:selectItems value="#{templateController.shellCommands}" var="c" itemLabel="#{c.name}"
+                                           itemValue="#{c}"/>
                         </p:selectOneMenu>
                     </f:facet>
                 </p:cellEditor>
@@ -93,19 +100,19 @@
                 <h:outputText value="#{t.fileName}"/>
                 <p:commandButton ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);"
                                  icon="fa fa-download" style="margin-left: 10px" title="Загрузить файл шаблона">
-                    <p:fileDownload value="#{t.downloadFile}" />
+                    <p:fileDownload value="#{t.downloadFile}"/>
                 </p:commandButton>
             </p:column>
 
-            <p:column width="20" style="text-align: center">
+            <p:column width="30" style="text-align: center">
                 <f:facet name="header">
-                    <i class="fa fa-lg fa-remove" title="Удалить"></i>
+                    <i class="fa fa-lg fa-remove" title="Удалить"> </i>
                 </f:facet>
 
                 <p:commandLink actionListener="#{templateController.remove(t)}" update="templateTable">
                     <p:confirm header="Удалить" message="Вы действительно хотите удалить Шаблон?"
                                icon="fa fa-warning"/>
-                    <i class="fa fa-lg fa-remove"></i>
+                    <i class="fa fa-lg fa-remove"> </i>
                 </p:commandLink>
                 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
