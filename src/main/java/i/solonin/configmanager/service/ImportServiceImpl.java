@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -31,7 +31,7 @@ public class ImportServiceImpl implements ImportService {
     public List<Device> getDevicesByExcel(UploadedFile file) throws InvalidFormatException {
         List<Device> result = new ArrayList<>();
         try {
-            List<Device> newDevices = read(file.getInputstream());
+            List<Device> newDevices = read(file.getInputStream());
             List<Device> oldDevices = deviceRepository.findAll();
             result.addAll(oldDevices.stream()
                     .filter(oldDevice -> newDevices.stream().noneMatch(oldDevice::equalsByHost))

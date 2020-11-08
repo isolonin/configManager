@@ -17,8 +17,6 @@
         <h:outputScript library="js" name="stomp.js"/>
         <h:outputScript library="js" name="custom.js"/>
         <h:outputScript library="js" name="check.js"/>
-
-        <h:outputStylesheet library="css" name="custom.css"/>
     </ui:define>
 
     <ui:define name="title">
@@ -30,18 +28,18 @@
     </ui:define>
 
     <ui:define name="main">
-        <p:remoteCommand name="updateStatuses" update="@(.update-status)"/>
         <p:dataTable id="deviceTable" widgetVar="deviceTable"
                      value="#{checkTemplateController.devices}" var="d"
                      filteredValue="#{checkTemplateController.filteredDevices}"
-                     selectionMode="multiple"
                      selection="#{checkTemplateController.selectedDevices}"
-                     rowKey="#{d.id}" rowIndexVar="row"
+                     selectionMode="multiple" disabledTextSelection="true"
+                     rowKey="#{d.id}" rowIndexVar="row" stickyHeader="true"
                      paginator="true" rows="50" paginatorAlwaysVisible="false"
                      paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                      currentPageReportTemplate="Всего {totalRecords}"
                      rowsPerPageTemplate="5,10,20,50,100,200"
                      emptyMessage="Нет записей">
+            <p:ajax event="rowSelect" onstart="console.log('123')"/>
             <p:column headerText="№" width="30" style="text-align: center">
                 #{row+1}
                 <p:rowToggler/>
@@ -55,7 +53,12 @@
                                      var="c" value="#{d.checks}" scrollable="true" scrollHeight="250"
                                      emptyMessage="Проверки не выполнялись">
                             <p:column>
-                                <p:commandButton icon="fa fa-lg fa-search" title="Показать результаты сверки"/>
+                                <p:commandButton icon="fa fa-lg fa-search" title="Показать результаты сверки"
+                                                 update=":main-form:checkDetail :main-form:header"
+                                                 oncomplete="PF('checkDialog').show()">
+                                    <f:setPropertyActionListener value="#{c}"
+                                                                 target="#{checkTemplateController.selectedCheckingResult}"/>
+                                </p:commandButton>
                             </p:column>
                             <p:column headerText="Время сверки" sortBy="#{c.createAt}">
                                 <h:outputText value="#{c.createAt}">
@@ -129,12 +132,12 @@
             </p:column>
             <p:column headerText="Результат последней сверки" sortBy="#{d.lastCheckingResult.type.name}"
                       filterBy="#{d.lastCheckingResult.type.name}"
-                      filterMatchMode="contains">
-                <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
-                    <h:outputText value="#{d.lastCheckingResult.type.name}" styleClass="update-status"/>
-                </span>
+                      filterMatchMode="contains" styleClass="update-status">
+                        <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
+                            <h:outputText value="#{d.lastCheckingResult.type.name}"/>
+                        </span>
                 <small>
-                    <h:outputText value="#{d.lastCheckingResult.createAt}" styleClass="update-status">
+                    <h:outputText value="#{d.lastCheckingResult.createAt}">
                         <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
                     </h:outputText>
                 </small>
@@ -142,6 +145,41 @@
 
             <p:column selectionMode="multiple" width="40" style="text-align: center"/>
         </p:dataTable>
+
+        <p:dialog widgetVar="checkDialog" modal="true" showEffect="fade" hideEffect="fade"
+                  resizable="false" closeOnEscape="true" position="center center">
+            <f:facet name="header">
+                <h:outputText id="header"
+                              value="Детализация сверки от #{checkTemplateController.selectedCheckingResult.createAt}"/>
+            </f:facet>
+            <p:outputPanel id="checkDetail" style="text-align:center">
+                <p:panel header="Используемый шаблон" styleClass="ui-g-6">
+                    <table>
+                        <p:repeat value="#{checkTemplateController.selectedCheckingResult.templateConfig}" var="c"
+                                  varStatus="status">
+                            <tr>
+                                <td style="text-align: left"
+                                    class="#{checkTemplateController.selectedCheckingResult.hasError(status.index) ? 'danger' : ''}">
+                                    #{c}
+                                </td>
+                            </tr>
+                        </p:repeat>
+                    </table>
+                </p:panel>
+                <p:panel header="Конфигурация устройства" styleClass="ui-g-6">
+                    <table>
+                        <p:repeat value="#{checkTemplateController.selectedCheckingResult.deviceConfig}" var="c"
+                                  varStatus="status">
+                            <tr>
+                                <td style="text-align: left">
+                                    #{c}
+                                </td>
+                            </tr>
+                        </p:repeat>
+                    </table>
+                </p:panel>
+            </p:outputPanel>
+        </p:dialog>
     </ui:define>
 </ui:composition>
 </html>

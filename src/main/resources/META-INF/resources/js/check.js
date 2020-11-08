@@ -13,7 +13,6 @@ function openSocket() {
         stompClient.subscribe('/client/update-check-status', function () {
             updateCheckingsTable();
             updateCheckButton();
-            updateStatuses();
         });
     });
 }

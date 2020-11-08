@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -14,6 +14,8 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static i.solonin.configmanager.constant.Constants.NEW_LINE;
 
 @Getter
 @Setter
@@ -49,6 +51,6 @@ public class Template extends DBEntity implements WithName {
     }
 
     public List<String> getConfigByLines() {
-        return Arrays.asList(getConfig().split("(\n|\r\n)"));
+        return Arrays.asList(getConfig().split(NEW_LINE));
     }
 }

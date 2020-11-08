@@ -13,8 +13,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import static i.solonin.configmanager.constant.Constants.NEW_LINE;
 
 @Getter
 @Slf4j
@@ -33,10 +36,19 @@ public class CheckTemplateController extends AbstractController {
     private List<Device> filteredDevices;
     @Setter
     private List<Device> selectedDevices;
+    private Device selectedDevice;
+    @Setter
+    private CheckingResult selectedCheckingResult;
 
     public void init() {
         devices = deviceRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
-        devices.forEach(d -> d.setCheckingNow(checkService.isDeviceChecking(d)));
+        devices.forEach(d -> {
+            d.getChecks().forEach(c -> {
+                c.setTemplateConfig(Arrays.asList(c.getTemplateConf().split(NEW_LINE)));
+                c.setDeviceConfig(Arrays.asList(c.getDeviceConf().split(NEW_LINE)));
+            });
+            d.setCheckingNow(checkService.isDeviceChecking(d));
+        });
     }
 
     public void checkAll() {
@@ -60,5 +72,13 @@ public class CheckTemplateController extends AbstractController {
     public void removeCheck(CheckingResult checkingResult) {
         checkService.remove(checkingResult);
         init();
+    }
+
+    public Device getSelectedDevice() {
+        return selectedDevice;
+    }
+
+    public void setSelectedDevice(Device selectedDevice) {
+        this.selectedDevice = selectedDevice;
     }
 }

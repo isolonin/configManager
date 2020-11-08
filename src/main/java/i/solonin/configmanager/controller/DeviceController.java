@@ -6,7 +6,6 @@ import i.solonin.configmanager.model.Region;
 import i.solonin.configmanager.service.repos.DeviceRepository;
 import i.solonin.configmanager.service.repos.ModelRepository;
 import i.solonin.configmanager.service.repos.RegionRepository;
-import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

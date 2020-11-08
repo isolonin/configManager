@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.primefaces.PrimeFaces;
 import org.primefaces.event.CellEditEvent;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
@@ -69,7 +69,7 @@ public class TemplateController extends AbstractController {
         t.setFile(file);
         t.setFileName(file.getFileName());
         t.setContentType(file.getContentType());
-        t.setData(file.getContents());
+        t.setData(file.getContent());
     }
 
     public void save() {

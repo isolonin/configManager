@@ -6,7 +6,6 @@ import i.solonin.configmanager.model.template.Divergence;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -40,6 +39,10 @@ public class CheckingResult extends DBEntity {
         Template template = device.getModel().getTemplate();
         this.templateConf = template.getConfig();
         this.templateConfig = template.getConfigByLines();
+    }
+
+    public boolean hasError(int line) {
+        return divergences.stream().anyMatch(d -> d.getTemplateLine() == line + 1);
     }
 
     public enum Type {
