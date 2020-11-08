@@ -1,16 +1,13 @@
 package i.solonin.configmanager.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Getter
 @Setter
@@ -21,8 +18,7 @@ import java.util.Optional;
         @Index(name = "idx_device_name", columnList = "name"),
         @Index(name = "idx_device_host", columnList = "host")
 })
-@ToString(includeFieldNames = false)
-public class Device extends DBEntity {
+public class Device extends DBId {
     @NotNull
     private String name;
     @NotNull
@@ -41,8 +37,10 @@ public class Device extends DBEntity {
     private String firmRevision;
     private String firmware;
 
-    @OneToMany
-    private List<Check> checks = new ArrayList<>();
+    @JsonBackReference
+    @OneToMany(mappedBy = "device", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createAt desc")
+    private List<CheckingResult> checks = new ArrayList<>();
 
     @Transient
     private ImportType importType;
@@ -62,9 +60,18 @@ public class Device extends DBEntity {
         this.firmware = other.getFirmware();
     }
 
+    public CheckingResult getLastCheckingResult() {
+        return checks.stream().max(Comparator.comparing(DBEntity::getCreateAt,
+                Comparator.nullsFirst(Comparator.naturalOrder()))).orElse(null);
+    }
+
     public boolean isEnoughForCheck() {
         return !StringUtils.isEmpty(login) && !StringUtils.isEmpty(password) &&
                 Optional.ofNullable(model).map(m -> m.getTemplate() != null).orElse(false);
+    }
+
+    public boolean isEnoughForConnect() {
+        return !StringUtils.isEmpty(login) && !StringUtils.isEmpty(password);
     }
 
     public boolean equalsByHost(Device other) {

@@ -1,16 +1,19 @@
-function startChecking(link) {
-    let $i = $(link).find('i');
-    $i.addClass('fa-spinner fa-spin');
-    $i.removeClass('fa-plug');
+function startChecking(button) {
+    const $button = $(button)
+    const $span = $button.find('span.ui-icon');
+    $span.attr('prev-classes', $span.attr('class'));
+    $span.addClass('fa-spinner fa-spin');
+    $button.addClass('disabled');
 }
 
 function openSocket() {
     let socket = new SockJS('/check-template');
     let stompClient = Stomp.over(socket);
-    stompClient.connect({}, function (frame) {
-        console.log('Connected: ' + frame);
-        stompClient.subscribe('/client/update-table', function () {
-            updateTable();
+    stompClient.connect({}, function () {
+        stompClient.subscribe('/client/update-check-status', function () {
+            updateCheckingsTable();
+            updateCheckButton();
+            updateStatuses();
         });
     });
 }

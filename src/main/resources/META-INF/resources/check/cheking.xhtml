@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html">
+
+<ui:composition template="../templates/template.xhtml">
+    <f:metadata>
+        <f:view>
+            <f:viewAction action="#{checkTemplateController.init}"/>
+        </f:view>
+    </f:metadata>
+
+    <ui:define name="header">
+        <h:outputScript library="js" name="sockjs.js"/>
+        <h:outputScript library="js" name="stomp.js"/>
+        <h:outputScript library="js" name="custom.js"/>
+        <h:outputScript library="js" name="check.js"/>
+
+        <h:outputStylesheet library="css" name="custom.css"/>
+    </ui:define>
+
+    <ui:define name="title">
+        Проверка по шаблону
+    </ui:define>
+
+    <ui:define name="buttons">
+
+    </ui:define>
+
+    <ui:define name="main">
+        <p:remoteCommand name="updateStatuses" update="@(.update-status)"/>
+        <p:dataTable id="deviceTable" widgetVar="deviceTable"
+                     value="#{checkTemplateController.devices}" var="d"
+                     filteredValue="#{checkTemplateController.filteredDevices}"
+                     selectionMode="multiple"
+                     selection="#{checkTemplateController.selectedDevices}"
+                     rowKey="#{d.id}" rowIndexVar="row"
+                     paginator="true" rows="50" paginatorAlwaysVisible="false"
+                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                     currentPageReportTemplate="Всего {totalRecords}"
+                     rowsPerPageTemplate="5,10,20,50,100,200"
+                     emptyMessage="Нет записей">
+            <p:column headerText="№" width="30" style="text-align: center">
+                #{row+1}
+                <p:rowToggler/>
+            </p:column>
+            <p:rowExpansion>
+                <div class="ui-g">
+                    <div class="ui-g-10">
+                        <p:remoteCommand name="updateCheckingsTable" update="checkingsTable"/>
+                        <p:dataTable id="checkingsTable" styleClass="update-checks-table"
+                                     tableStyle="table-layout: auto"
+                                     var="c" value="#{d.checks}" scrollable="true" scrollHeight="250"
+                                     emptyMessage="Проверки не выполнялись">
+                            <p:column>
+                                <p:commandButton icon="fa fa-lg fa-search" title="Показать результаты сверки"/>
+                            </p:column>
+                            <p:column headerText="Время сверки" sortBy="#{c.createAt}">
+                                <h:outputText value="#{c.createAt}">
+                                    <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Статус" sortBy="#{c.type.name}"
+                                      styleClass="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
+                                <h:outputText value="#{c.type.name}"/>
+                            </p:column>
+                            <p:column headerText="Кол-во расхождений" sortBy="#{c.divergences.size()}" width="150"
+                                      style="text-align: center">
+                                <h:outputText value="#{c.divergences.size()}"/>
+                            </p:column>
+                            <p:column width="30">
+                                <p:commandLink actionListener="#{checkTemplateController.removeCheck(c)}"
+                                               update="checkingsTable @(.last-check-status)">
+                                    <p:confirm header="Удалить" message="Вы действительно хотите удалить Сверку?"
+                                               icon="fa fa-warning"/>
+                                    <i class="fa fa-lg fa-remove"> </i>
+                                </p:commandLink>
+                                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                                    <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes"
+                                                     icon="pi pi-check"/>
+                                    <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no"
+                                                     icon="pi pi-times"/>
+                                </p:confirmDialog>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                    <div class="ui-g-2">
+                        <p:remoteCommand name="updateCheckButton" update="checkButton"/>
+                        <p:commandButton id="checkButton" actionListener="#{checkTemplateController.check(d)}"
+                                         onclick="startChecking(this)" widgetVar="check_#{d.id}"
+                                         disabled="#{d.checkingNow or !d.enoughForCheck}"
+                                         icon="fa fa-lg #{d.checkingNow ? 'fa-spinner fa-spin' : 'fa-play'}"
+                                         styleClass="ui-g-12"
+                                         value="Начать сверку"/>
+
+                        <p:commandButton disabled="#{!d.enoughForConnect}"
+                                         icon="fa fa-lg fa-plug"
+                                         styleClass="ui-g-12"
+                                         value="Открыть терминал"/>
+                    </div>
+                </div>
+            </p:rowExpansion>
+            <p:column headerText="Наименование" sortBy="#{d.name}" filterBy="#{d.name}" filterMatchMode="contains">
+                <h:outputText value="#{d.name}"/>
+            </p:column>
+            <p:column headerText="Хост" width="150" sortBy="#{d.host}" filterBy="#{d.host}"
+                      filterMatchMode="contains">
+                <h:outputText value="#{d.host}"/>
+            </p:column>
+            <p:column headerText="Логин" sortBy="#{d.login}" filterBy="#{d.login}" filterMatchMode="contains"
+                      styleClass="#{empty d.login ? 'warning' : ''}">
+                <h:outputText value="#{empty d.login ? 'Не задано' : d.login}"/>
+            </p:column>
+            <p:column headerText="Модель" sortBy="#{d.model.fullName}" filterBy="#{d.model.fullName}" width="20%"
+                      filterMatchMode="contains">
+                <h:outputText value="#{d.model.fullName}"/>
+            </p:column>
+            <p:column headerText="Шаблон" sortBy="#{d.model.template.name}" filterBy="#{d.model.template.name}"
+                      width="20%"
+                      styleClass="#{empty d.model.template ? 'warning' : ''}"
+                      filterMatchMode="contains">
+                <h:outputText value="#{empty d.model.template ? 'Не задано' : d.model.template.name}"/>
+            </p:column>
+            <p:column headerText="Регион" sortBy="#{d.region.name}" filterBy="#{d.region.name}"
+                      filterMatchMode="contains">
+                <h:outputText value="#{d.region.name}"/>
+            </p:column>
+            <p:column headerText="Результат последней сверки" sortBy="#{d.lastCheckingResult.type.name}"
+                      filterBy="#{d.lastCheckingResult.type.name}"
+                      filterMatchMode="contains">
+                <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
+                    <h:outputText value="#{d.lastCheckingResult.type.name}" styleClass="update-status"/>
+                </span>
+                <small>
+                    <h:outputText value="#{d.lastCheckingResult.createAt}" styleClass="update-status">
+                        <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
+                    </h:outputText>
+                </small>
+            </p:column>
+
+            <p:column selectionMode="multiple" width="40" style="text-align: center"/>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>
+</html>

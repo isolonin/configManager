@@ -1,5 +1,6 @@
 package i.solonin.configmanager.controller;
 
+import i.solonin.configmanager.model.CheckingResult;
 import i.solonin.configmanager.model.Device;
 import i.solonin.configmanager.service.connect.CheckService;
 import i.solonin.configmanager.service.repos.DeviceRepository;
@@ -27,9 +28,11 @@ public class CheckTemplateController extends AbstractController {
     @Autowired
     private SimpMessagingTemplate webSocket;
 
+    private List<Device> devices;
     @Setter
     private List<Device> filteredDevices;
-    private List<Device> devices;
+    @Setter
+    private List<Device> selectedDevices;
 
     public void init() {
         devices = deviceRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
@@ -46,11 +49,16 @@ public class CheckTemplateController extends AbstractController {
         device.setCheckingNow(true);
         checkService.check(device, result -> {
             try {
-                webSocket.convertAndSend("/client/update-table", device.getId());
-                device.setCheckingNow(false);
+                init();
+                webSocket.convertAndSend("/client/update-check-status", device.getId());
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
         });
+    }
+
+    public void removeCheck(CheckingResult checkingResult) {
+        checkService.remove(checkingResult);
+        init();
     }
 }

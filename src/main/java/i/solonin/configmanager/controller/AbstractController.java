@@ -1,10 +1,9 @@
 package i.solonin.configmanager.controller;
 
-import i.solonin.configmanager.model.DBEntity;
+import i.solonin.configmanager.model.DBId;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -38,13 +37,13 @@ public abstract class AbstractController {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, message, null));
     }
 
-    <T extends DBEntity> void save(T entity, List<T> list, List<T> filtered, JpaRepository<T, Long> repository) {
+    <T extends DBId> void save(T entity, List<T> list, List<T> filtered, JpaRepository<T, Long> repository) {
         repository.save(entity);
         list.add(entity);
         if (filtered != null) filtered.add(entity);
     }
 
-    <T extends DBEntity> void remove(T entity, List<T> list, List<T> filtered, JpaRepository<T, Long> repository) {
+    <T extends DBId> void remove(T entity, List<T> list, List<T> filtered, JpaRepository<T, Long> repository) {
         try {
             list.remove(entity);
             if (filtered != null) filtered.remove(entity);

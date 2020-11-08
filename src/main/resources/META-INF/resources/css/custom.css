@@ -10,16 +10,6 @@ body {
     font-size: 14px;
 }
 
-table .ui-widget-content .ui-state-highlight {
-    border: 1px solid #C7C7C7;
-    background: #DCDCDC;
-    color: #363636;
-}
-
-tr .ui-widget-content .ui-state-hover {
-    background: #1C1C1C;
-}
-
 td {
     padding: 3px;
 }
@@ -29,6 +19,18 @@ td {
     opacity: 0.4;
 }
 
+.success {
+    background-color: #E9FBE9;
+}
+
+.warning, body .ui-datatable tr.ui-state-hover td.warning {
+    background-color: #FFE0B2;
+}
+
 .danger {
     background-color: #FFB9C2;
+}
+
+.ui-datatable-scrollable-theadclone {
+    visibility: collapse;
 }

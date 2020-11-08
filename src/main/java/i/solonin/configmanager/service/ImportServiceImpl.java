@@ -91,7 +91,7 @@ public class ImportServiceImpl implements ImportService {
         Device origin = device.getOriginDevice();
         if (device.getRegion() != null)
             device.setRegion(regionRepository.getByNameOrCreate(device.getRegion().getName()));
-        device.setId(Optional.ofNullable(origin).map(DBEntity::getId).orElse(null));
+        device.setId(Optional.ofNullable(origin).map(DBId::getId).orElse(null));
         device.setLogin(Optional.ofNullable(origin).map(Device::getLogin).orElse(null));
         device.setPassword(Optional.ofNullable(origin).map(Device::getPassword).orElse(null));
         deviceRepository.save(device);

@@ -6,13 +6,15 @@ import java.util.regex.Pattern;
 
 @Getter
 public abstract class Directive extends Line {
-    private String text;
-    private Pattern pattern;
+    private final String text;
+    private final Pattern pattern;
 
     Directive(int line, String text) {
         super(line);
-        this.text = text;
-        this.pattern = Pattern.compile(text.replaceAll("\\$[^ ]*", "[^ ]*").replaceAll("[%(){}]",""));
+        this.text = text.trim();
+        this.pattern = Pattern.compile(text
+                .replaceAll("\\$[^ ]*", "[^ ]*")
+                .replaceAll("[%(){}\\[\\]\\\\+]", ""));
     }
 
     public String getName() {

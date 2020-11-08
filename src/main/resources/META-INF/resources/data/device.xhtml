@@ -83,7 +83,7 @@
         <p:messages id="message" closable="true" forType=""/>
         <p:dataTable id="deviceTable" value="#{deviceController.devices}" var="c" widgetVar="deviceTable"
                      filteredValue="#{deviceController.filteredDevices}"
-                     editable="true"
+                     editable="true" stickyHeader="true"
                      paginator="true" rows="10" paginatorAlwaysVisible="false"
                      paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                      currentPageReportTemplate="Всего {totalRecords}"

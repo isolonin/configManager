@@ -1,17 +1,23 @@
 package i.solonin.configmanager.service.connect;
 
+import i.solonin.configmanager.model.CheckingResult;
 import i.solonin.configmanager.model.Device;
-import i.solonin.configmanager.model.template.Result;
+import i.solonin.configmanager.model.template.Divergence;
+import i.solonin.configmanager.service.repos.CheckingResultRepository;
+import i.solonin.configmanager.service.repos.DeviceRepository;
 import i.solonin.configmanager.service.template.Checker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -22,27 +28,40 @@ import java.util.stream.Stream;
 @Slf4j
 @RequiredArgsConstructor
 public class CheckServiceImpl implements CheckService {
-    private final Checker checker;
     private final Map<Device, Future<Void>> currentTasks = new ConcurrentHashMap<>();
+    private final List<String> filesNames = Arrays.asList("huawei_1.cfg", "huawei_2.cfg", "huawei_3.cfg", "huawei_4.cfg");
+
+    @Autowired
+    private DeviceRepository deviceRepository;
+    @Autowired
+    private CheckingResultRepository checkingResultRepository;
+    private final Checker checker;
 
     @Override
-    public void check(Device device, Consumer<Result> consumer) {
+    public void check(Device device, Consumer<CheckingResult> consumer) {
         CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
-            List<String> result = new ArrayList<>();
-            log.info("Start chek device: {}", device.getName());
+            CheckingResult result = new CheckingResult(device);
+            log.info("Start chek device: {}", device.getId());
 
-            try (Stream<String> stream = Files.lines(Paths.get("configs/huawei_1.cfg"))) {
-                List<String> deviceConfig = new ArrayList<>();
-                stream.forEach(deviceConfig::add);
-                checker.diff(device.getModel().getTemplate(), deviceConfig);
+            Random r = new Random();
+            String fileName = filesNames.stream().skip(r.nextInt(filesNames.size() - 1)).findFirst().get();
+            try (Stream<String> stream = Files.lines(Paths.get("config/" + fileName))) {
+                stream.forEach(s -> result.getDeviceConfig().add(s));
+                result.setDeviceConf(String.join("\n", result.getDeviceConfig()));
+
+                List<Divergence> divergences = checker.diff(device.getModel().getTemplate(), result.getDeviceConfig());
+                divergences.forEach(d -> d.setCheckingResult(result));
+                result.setDivergences(divergences);
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
             return result;
-        }).thenAccept(f -> {
-            consumer.accept(new Result(device, f));
+        }).thenAccept(r -> {
+            save(r);
             currentTasks.remove(device);
-            log.info("Stop chek device: {}", device);
+
+            consumer.accept(r);
+            log.info("Stop chek device: {}", device.getId());
         });
         currentTasks.put(device, future);
     }
@@ -50,5 +69,21 @@ public class CheckServiceImpl implements CheckService {
     @Override
     public boolean isDeviceChecking(Device device) {
         return currentTasks.containsKey(device);
+    }
+
+    @Override
+    @Transactional
+    public void remove(CheckingResult checkingResult) {
+        Device device = checkingResult.getDevice();
+        device.getChecks().remove(checkingResult);
+        deviceRepository.save(device);
+    }
+
+    private void save(CheckingResult checkingResult) {
+        if (checkingResult.getDivergences().isEmpty())
+            checkingResult.setType(CheckingResult.Type.MATCHES_PATTERN);
+        else
+            checkingResult.setType(CheckingResult.Type.NOT_MATCHES_PATTERN);
+        checkingResultRepository.saveAndFlush(checkingResult);
     }
 }

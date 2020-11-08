@@ -30,11 +30,12 @@ public class Template extends DBEntity implements WithName {
     @Lob
     @NotNull
     private byte[] data;
-    @NotNull
-    @ManyToOne
-    private ShellCommand showConfigCommand;
+    private EquipmentType type;
     @OneToMany(mappedBy = "template", fetch = FetchType.EAGER)
     private List<Model> models = new ArrayList<>();
+
+    @Transient
+    private UploadedFile uploadedFile;
 
     @Transient
     private UploadedFile file;
@@ -43,8 +44,11 @@ public class Template extends DBEntity implements WithName {
         return new DefaultStreamedContent(new ByteArrayInputStream(data), contentType, fileName);
     }
 
-    public List<String> getConfig() {
-        String string = new String(data);
-        return Arrays.asList(string.split("(\n|\r\n)"));
+    public String getConfig() {
+        return new String(data);
+    }
+
+    public List<String> getConfigByLines() {
+        return Arrays.asList(getConfig().split("(\n|\r\n)"));
     }
 }
