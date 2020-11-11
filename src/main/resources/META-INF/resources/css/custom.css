@@ -28,9 +28,15 @@ td {
 }
 
 .danger {
-    background-color: #FFB9C2;
+    background-color: #FFE6DE;
 }
 
 .ui-datatable-scrollable-theadclone {
     visibility: collapse;
+}
+
+tr.ui-state-highlight, tr.ui-state-highlight td {
+    background-color: #90D4F4 !important;
+    background-image: none !important;
+    color: #444;
 }

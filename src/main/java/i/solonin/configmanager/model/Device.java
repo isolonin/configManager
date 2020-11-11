@@ -66,7 +66,7 @@ public class Device extends DBId {
     }
 
     public boolean isEnoughForCheck() {
-        return !StringUtils.isEmpty(login) && !StringUtils.isEmpty(password) &&
+        return !isCheckingNow && !StringUtils.isEmpty(login) && !StringUtils.isEmpty(password) &&
                 Optional.ofNullable(model).map(m -> m.getTemplate() != null).orElse(false);
     }
 

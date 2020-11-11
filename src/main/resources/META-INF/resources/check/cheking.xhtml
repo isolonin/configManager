@@ -24,22 +24,42 @@
     </ui:define>
 
     <ui:define name="buttons">
-
+        <p:remoteCommand name="updateGlobalButtons" update="checkAll executeAll"/>
+        <div style="margin-bottom: 5px">
+            <p:commandButton id="checkAll" icon="fa fa-lg fa-play" actionListener="#{checkTemplateController.checkAll}"
+                             onclick="startChecking(this)" style="width: 270px"
+                             value="Начать сверку для выбранного" update=":main-form:deviceTable @this"
+                             disabled="#{empty checkTemplateController.selectedDevices or checkTemplateController.checkAllAlreadyRunning}"/>
+        </div>
+        <div>
+            <p:commandButton id="executeAll" icon="fa fa-lg fa-terminal"
+                             value="Выполнить для выбранного" style="width: 270px"
+                             disabled="#{empty checkTemplateController.selectedDevices}"/>
+        </div>
     </ui:define>
 
     <ui:define name="main">
+        <!--
+        todo: selectionMode="checkbox" Mandatory! This value was changed and change not appear in documentation only in sourses:
+        @typedef {"radio" | "checkbox"} PrimeFaces.widget.DataTable.SelectionMode Indicates whether rows are selected via radio buttons or via checkboxes.
+        -->
         <p:dataTable id="deviceTable" widgetVar="deviceTable"
                      value="#{checkTemplateController.devices}" var="d"
                      filteredValue="#{checkTemplateController.filteredDevices}"
                      selection="#{checkTemplateController.selectedDevices}"
-                     selectionMode="multiple" disabledTextSelection="true"
+                     selectionMode="checkbox" disabledSelection="#{!d.enoughForCheck}"
                      rowKey="#{d.id}" rowIndexVar="row" stickyHeader="true"
                      paginator="true" rows="50" paginatorAlwaysVisible="false"
                      paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PageLinks} {PreviousPageLink} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                      currentPageReportTemplate="Всего {totalRecords}"
                      rowsPerPageTemplate="5,10,20,50,100,200"
                      emptyMessage="Нет записей">
-            <p:ajax event="rowSelect" onstart="console.log('123')"/>
+            <p:ajax event="rowSelect" update=":buttons-form:checkAll :buttons-form:executeAll"/>
+            <p:ajax event="rowUnselect" update=":buttons-form:checkAll :buttons-form:executeAll"/>
+            <p:ajax event="toggleSelect" update=":buttons-form:checkAll :buttons-form:executeAll"/>
+            <p:ajax event="rowSelectCheckbox" update=":buttons-form:checkAll :buttons-form:executeAll"/>
+            <p:ajax event="rowUnselectCheckbox" update=":buttons-form:checkAll :buttons-form:executeAll"/>
+
             <p:column headerText="№" width="30" style="text-align: center">
                 #{row+1}
                 <p:rowToggler/>
@@ -80,7 +100,7 @@
                                                icon="fa fa-warning"/>
                                     <i class="fa fa-lg fa-remove"> </i>
                                 </p:commandLink>
-                                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                                <p:confirmDialog global="true">
                                     <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes"
                                                      icon="pi pi-check"/>
                                     <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no"
@@ -99,9 +119,10 @@
                                          value="Начать сверку"/>
 
                         <p:commandButton disabled="#{!d.enoughForConnect}"
-                                         icon="fa fa-lg fa-plug"
-                                         styleClass="ui-g-12"
-                                         value="Открыть терминал"/>
+                                         icon="fa fa-lg fa-terminal" styleClass="ui-g-12"
+                                         value="Открыть терминал" actionListener="#{terminalController.connect(d)}"
+                                         update="main-form:terminalDialogTitle"
+                                         oncomplete="PF('terminalDialog').show()"/>
                     </div>
                 </div>
             </p:rowExpansion>
@@ -133,18 +154,36 @@
             <p:column headerText="Результат последней сверки" sortBy="#{d.lastCheckingResult.type.name}"
                       filterBy="#{d.lastCheckingResult.type.name}"
                       filterMatchMode="contains" styleClass="update-status">
-                        <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
-                            <h:outputText value="#{d.lastCheckingResult.type.name}"/>
-                        </span>
-                <small>
-                    <h:outputText value="#{d.lastCheckingResult.createAt}">
-                        <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
-                    </h:outputText>
-                </small>
+                <p:outputPanel id="last-check-status">
+                    <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
+                        <h:outputText value="#{d.lastCheckingResult.type.name}"/>
+                    </span>
+                    <small>
+                        <h:outputText value="#{d.lastCheckingResult.createAt}">
+                            <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
+                        </h:outputText>
+                    </small>
+                </p:outputPanel>
             </p:column>
 
             <p:column selectionMode="multiple" width="40" style="text-align: center"/>
         </p:dataTable>
+
+        <p:remoteCommand name="closeTerminal" actionListener="#{terminalController.close}"/>
+        <p:remoteCommand name="updateTerminal" update="main-form:terminalDialogTitle terminal terminal-clear"/>
+        <p:dialog widgetVar="terminalDialog" modal="true" showEffect="fade" hideEffect="fade" appendTo="@form"
+                  position="center center" width="600px">
+            <f:facet name="header">
+                <p:outputPanel id="terminalDialogTitle">
+                    <h:outputText value="#{terminalController.terminalStatus}"/>
+                </p:outputPanel>
+            </f:facet>
+            <p:focus for="terminal"/>
+            <p:terminal id="terminal" widgetVar="term" commandHandler="#{terminalController.handleCommand}"
+                        prompt="#" styleClass="#{terminalController.telnet.connected ? '' : 'ui-overlay-hidden'}"/>
+            <p:commandButton id="terminal-clear" type="button" value="Очистить" onclick="PF('term').clear()"
+                             disabled="#{!terminalController.telnet.connected}"/>
+        </p:dialog>
 
         <p:dialog widgetVar="checkDialog" modal="true" showEffect="fade" hideEffect="fade"
                   resizable="false" closeOnEscape="true" position="center center">

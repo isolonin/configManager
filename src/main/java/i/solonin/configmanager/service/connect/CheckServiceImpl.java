@@ -14,10 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -30,6 +27,7 @@ import java.util.stream.Stream;
 public class CheckServiceImpl implements CheckService {
     private final Map<Device, Future<Void>> currentTasks = new ConcurrentHashMap<>();
     private final List<String> filesNames = Arrays.asList("huawei_1.cfg", "huawei_2.cfg", "huawei_3.cfg", "huawei_4.cfg");
+    private CompletableFuture<Void> futureCheckAll;
 
     @Autowired
     private DeviceRepository deviceRepository;
@@ -39,31 +37,51 @@ public class CheckServiceImpl implements CheckService {
 
     @Override
     public void check(Device device, Consumer<CheckingResult> consumer) {
-        CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
-            CheckingResult result = new CheckingResult(device);
-            log.info("Start chek device: {}", device.getId());
-
-            Random r = new Random();
-            String fileName = filesNames.stream().skip(r.nextInt(filesNames.size() - 1)).findFirst().get();
-            try (Stream<String> stream = Files.lines(Paths.get("config/" + fileName))) {
-                stream.forEach(s -> result.getDeviceConfig().add(s));
-                result.setDeviceConf(String.join("\n", result.getDeviceConfig()));
-
-                List<Divergence> divergences = checker.diff(device.getModel().getTemplate(), result.getDeviceConfig());
-                divergences.forEach(d -> d.setCheckingResult(result));
-                result.setDivergences(divergences);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
-            return result;
-        }).thenAccept(r -> {
-            save(r);
-            currentTasks.remove(device);
-
-            consumer.accept(r);
-            log.info("Stop chek device: {}", device.getId());
-        });
+        CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> check(device))
+                .thenAccept(r -> {
+                    save(r);
+                    currentTasks.remove(device);
+                    consumer.accept(r);
+                    log.info("Stop chek device: {}", device.getId());
+                });
         currentTasks.put(device, future);
+    }
+
+    @Override
+    public CompletableFuture<Void> check(List<Device> devices) {
+        futureCheckAll = CompletableFuture.supplyAsync(() -> {
+            List<CheckingResult> result = new ArrayList<>();
+            devices.forEach(d -> result.add(check(d)));
+            return result;
+        }).thenAccept(list -> {
+            list.forEach(this::save);
+            log.info("Stop chek devices: {}", devices);
+        });
+        return futureCheckAll;
+    }
+
+    @Override
+    public boolean isCheckAllAlreadyRunning() {
+        return Optional.ofNullable(futureCheckAll).map(f -> !f.isDone()).orElse(false);
+    }
+
+    private CheckingResult check(Device device) {
+        CheckingResult result = new CheckingResult(device);
+        log.info("Start chek device: {}", device.getId());
+
+        Random r = new Random();
+        String fileName = filesNames.stream().skip(r.nextInt(filesNames.size() - 1)).findFirst().get();
+        try (Stream<String> stream = Files.lines(Paths.get("config/" + fileName))) {
+            stream.forEach(s -> result.getDeviceConfig().add(s));
+            result.setDeviceConf(String.join("\n", result.getDeviceConfig()));
+
+            List<Divergence> divergences = checker.diff(device.getModel().getTemplate(), result.getDeviceConfig());
+            divergences.forEach(d -> d.setCheckingResult(result));
+            result.setDivergences(divergences);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return result;
     }
 
     @Override

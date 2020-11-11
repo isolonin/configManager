@@ -11,11 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static i.solonin.configmanager.constant.Constants.NEW_LINE;
 
@@ -36,10 +38,10 @@ public class CheckTemplateController extends AbstractController {
     private List<Device> filteredDevices;
     @Setter
     private List<Device> selectedDevices;
-    private Device selectedDevice;
     @Setter
     private CheckingResult selectedCheckingResult;
 
+    @PostConstruct
     public void init() {
         devices = deviceRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
         devices.forEach(d -> {
@@ -52,9 +54,22 @@ public class CheckTemplateController extends AbstractController {
     }
 
     public void checkAll() {
-        Optional.ofNullable(filteredDevices).orElse(devices).stream()
-                .filter(Device::isEnoughForCheck)
-                .filter(d -> !checkService.isDeviceChecking(d)).forEach(this::check);
+        if (!checkService.isCheckAllAlreadyRunning()) {
+            try {
+                List<Device> devices = Optional.ofNullable(selectedDevices).orElse(this.devices).stream()
+                        .filter(Device::isEnoughForCheck)
+                        .filter(d -> !checkService.isDeviceChecking(d))
+                        .collect(Collectors.toList());
+                checkService.check(devices).get();
+                selectedDevices = null;
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    public boolean isCheckAllAlreadyRunning() {
+        return checkService.isCheckAllAlreadyRunning();
     }
 
     public void check(Device device) {
@@ -62,6 +77,7 @@ public class CheckTemplateController extends AbstractController {
         checkService.check(device, result -> {
             try {
                 init();
+                device.setCheckingNow(false);
                 webSocket.convertAndSend("/client/update-check-status", device.getId());
             } catch (Exception e) {
                 log.error(e.getMessage());
@@ -72,13 +88,5 @@ public class CheckTemplateController extends AbstractController {
     public void removeCheck(CheckingResult checkingResult) {
         checkService.remove(checkingResult);
         init();
-    }
-
-    public Device getSelectedDevice() {
-        return selectedDevice;
-    }
-
-    public void setSelectedDevice(Device selectedDevice) {
-        this.selectedDevice = selectedDevice;
     }
 }

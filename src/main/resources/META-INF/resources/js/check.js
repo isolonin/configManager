@@ -7,12 +7,24 @@ function startChecking(button) {
 }
 
 function openSocket() {
-    let socket = new SockJS('/check-template');
+    const socket = new SockJS('/check-template');
     let stompClient = Stomp.over(socket);
     stompClient.connect({}, function () {
         stompClient.subscribe('/client/update-check-status', function () {
-            updateCheckingsTable();
-            updateCheckButton();
+            try {
+                updateCheckingsTable();
+            }catch (e){}
+            try {
+                updateCheckButton();
+            }catch (e){}
+        });
+        stompClient.subscribe('/client/update-terminal-connection', function (resp) {
+            if (resp.body) {
+                console.log('updateTerminal');
+                updateTerminal();
+            } else {
+                console.log(resp);
+            }
         });
     });
 }
