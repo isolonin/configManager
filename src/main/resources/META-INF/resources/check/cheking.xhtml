@@ -43,6 +43,7 @@
         todo: selectionMode="checkbox" Mandatory! This value was changed and change not appear in documentation only in sourses:
         @typedef {"radio" | "checkbox"} PrimeFaces.widget.DataTable.SelectionMode Indicates whether rows are selected via radio buttons or via checkboxes.
         -->
+        <p:remoteCommand name="updateAfterCheck" update="@(.update-after-chack)"/>
         <p:dataTable id="deviceTable" widgetVar="deviceTable"
                      value="#{checkTemplateController.devices}" var="d"
                      filteredValue="#{checkTemplateController.filteredDevices}"
@@ -67,8 +68,7 @@
             <p:rowExpansion>
                 <div class="ui-g">
                     <div class="ui-g-10">
-                        <p:remoteCommand name="updateCheckingsTable" update="checkingsTable"/>
-                        <p:dataTable id="checkingsTable" styleClass="update-checks-table"
+                        <p:dataTable id="checkingsTable" styleClass="update-after-chack"
                                      tableStyle="table-layout: auto"
                                      var="c" value="#{d.checks}" scrollable="true" scrollHeight="250"
                                      emptyMessage="Проверки не выполнялись">
@@ -110,12 +110,11 @@
                         </p:dataTable>
                     </div>
                     <div class="ui-g-2">
-                        <p:remoteCommand name="updateCheckButton" update="checkButton"/>
                         <p:commandButton id="checkButton" actionListener="#{checkTemplateController.check(d)}"
                                          onclick="startChecking(this)" widgetVar="check_#{d.id}"
                                          disabled="#{d.checkingNow or !d.enoughForCheck}"
                                          icon="fa fa-lg #{d.checkingNow ? 'fa-spinner fa-spin' : 'fa-play'}"
-                                         styleClass="ui-g-12"
+                                         styleClass="ui-g-12 update-after-chack"
                                          value="Начать сверку"/>
 
                         <p:commandButton disabled="#{!d.enoughForConnect}"
@@ -154,7 +153,7 @@
             <p:column headerText="Результат последней сверки" sortBy="#{d.lastCheckingResult.type.name}"
                       filterBy="#{d.lastCheckingResult.type.name}"
                       filterMatchMode="contains" styleClass="update-status">
-                <p:outputPanel id="last-check-status">
+                <p:outputPanel styleClass="update-after-chack">
                     <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
                         <h:outputText value="#{d.lastCheckingResult.type.name}"/>
                     </span>

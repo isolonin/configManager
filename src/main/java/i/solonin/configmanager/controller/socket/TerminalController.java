@@ -98,7 +98,7 @@ public class TerminalController {
     }
 
     private String terminal() {
-        if (telnet.getRemoteAddress() != null)
+        if (telnet != null && telnet.getRemoteAddress() != null)
             return Optional.ofNullable(telnet)
                     .map(t -> String.format("%s:%d", telnet.getRemoteAddress().getHostAddress(), telnet.getRemotePort()))
                     .orElse(null);

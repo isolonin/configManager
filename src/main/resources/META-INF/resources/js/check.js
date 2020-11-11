@@ -11,12 +11,7 @@ function openSocket() {
     let stompClient = Stomp.over(socket);
     stompClient.connect({}, function () {
         stompClient.subscribe('/client/update-check-status', function () {
-            try {
-                updateCheckingsTable();
-            }catch (e){}
-            try {
-                updateCheckButton();
-            }catch (e){}
+            updateAfterCheck();
         });
         stompClient.subscribe('/client/update-terminal-connection', function (resp) {
             if (resp.body) {

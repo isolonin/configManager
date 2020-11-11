@@ -78,6 +78,7 @@ public class CheckServiceImpl implements CheckService {
             List<Divergence> divergences = checker.diff(device.getModel().getTemplate(), result.getDeviceConfig());
             divergences.forEach(d -> d.setCheckingResult(result));
             result.setDivergences(divergences);
+            device.getChecks().add(0, result);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
