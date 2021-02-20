@@ -1,7 +1,7 @@
 package i.solonin.configmanager.service.repos.custom;
 
-import i.solonin.configmanager.model.Model;
-import i.solonin.configmanager.model.Vendor;
+import i.solonin.configmanager.model.master.Model;
+import i.solonin.configmanager.model.master.Vendor;
 import i.solonin.configmanager.service.repos.ModelRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

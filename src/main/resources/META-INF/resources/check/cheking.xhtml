@@ -3,7 +3,8 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+>
 
 <ui:composition template="../templates/template.xhtml">
     <f:metadata>
@@ -24,25 +25,27 @@
     </ui:define>
 
     <ui:define name="buttons">
-        <p:remoteCommand name="updateGlobalButtons" update="checkAll executeAll"/>
+        <p:remoteCommand name="updateButtons" update="checkAll executeAll"/>
         <div style="margin-bottom: 5px">
-            <p:commandButton id="checkAll" icon="fa fa-lg fa-play" actionListener="#{checkTemplateController.checkAll}"
-                             onclick="startChecking(this)" style="width: 270px"
-                             value="Начать сверку для выбранного" update=":main-form:deviceTable @this"
+            <p:commandButton id="checkAll" actionListener="#{checkTemplateController.checkAll}" style="width: 270px"
+                             icon="fa fa-lg #{checkTemplateController.checkAllAlreadyRunning ? 'fa-spinner fa-spin' : 'fa-play'}"
+                             value="Начать сверку для выбранного" update="@(.update-after-chack) @form"
+                             oncomplete="PF('deviceTable').unselectAllRows()"
                              disabled="#{empty checkTemplateController.selectedDevices or checkTemplateController.checkAllAlreadyRunning}"/>
         </div>
         <div>
             <p:commandButton id="executeAll" icon="fa fa-lg fa-terminal"
-                             value="Выполнить для выбранного" style="width: 270px"
+                             value="Выполнить для выбранного" style="width: 270px" onclick="PF('commandsDialog').show()"
                              disabled="#{empty checkTemplateController.selectedDevices}"/>
         </div>
     </ui:define>
 
     <ui:define name="main">
         <!--
-        todo: selectionMode="checkbox" Mandatory! This value was changed and change not appear in documentation only in sourses:
+        todo: selectionMode="checkbox" WARRNING! This value was changed and change not appear in documentation only in sourses:
         @typedef {"radio" | "checkbox"} PrimeFaces.widget.DataTable.SelectionMode Indicates whether rows are selected via radio buttons or via checkboxes.
         -->
+
         <p:remoteCommand name="updateAfterCheck" update="@(.update-after-chack)"/>
         <p:dataTable id="deviceTable" widgetVar="deviceTable"
                      value="#{checkTemplateController.devices}" var="d"
@@ -70,51 +73,55 @@
                     <div class="ui-g-10">
                         <p:dataTable id="checkingsTable" styleClass="update-after-chack"
                                      tableStyle="table-layout: auto"
-                                     var="c" value="#{d.checks}" scrollable="true" scrollHeight="250"
+                                     var="c" value="#{d.results}" scrollable="true" scrollHeight="250"
                                      emptyMessage="Проверки не выполнялись">
                             <p:column>
                                 <p:commandButton icon="fa fa-lg fa-search" title="Показать результаты сверки"
+                                                 rendered="#{c['class'].simpleName eq 'CheckingResult'}"
                                                  update=":main-form:checkDetail :main-form:header"
                                                  oncomplete="PF('checkDialog').show()">
                                     <f:setPropertyActionListener value="#{c}"
                                                                  target="#{checkTemplateController.selectedCheckingResult}"/>
                                 </p:commandButton>
+                                <p:commandButton icon="fa fa-lg fa-search" title="Показать результаты выполнения"
+                                                 rendered="#{c['class'].simpleName eq 'ExecutionResult'}"
+                                                 update=":main-form:executionDetail :main-form:executionHeader"
+                                                 oncomplete="PF('executionDialog').show()">
+                                    <f:setPropertyActionListener value="#{c}"
+                                                                 target="#{checkTemplateController.selectedExecutionResult}"/>
+                                </p:commandButton>
                             </p:column>
-                            <p:column headerText="Время сверки" sortBy="#{c.createAt}">
+                            <p:column headerText="Время последнего действия" sortBy="#{c.createAt}">
                                 <h:outputText value="#{c.createAt}">
                                     <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
                                 </h:outputText>
                             </p:column>
-                            <p:column headerText="Статус" sortBy="#{c.type.name}"
-                                      styleClass="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
-                                <h:outputText value="#{c.type.name}"/>
+                            <p:column headerText="Действие">
+                                <h:outputText value="Выполнение команды"
+                                              rendered="#{c['class'].simpleName eq 'ExecutionResult'}"/>
+                                <h:outputText value="Проверка" rendered="#{c['class'].simpleName eq 'CheckingResult'}"/>
                             </p:column>
-                            <p:column headerText="Кол-во расхождений" sortBy="#{c.divergences.size()}" width="150"
-                                      style="text-align: center">
-                                <h:outputText value="#{c.divergences.size()}"/>
+                            <p:column headerText="Статус" sortBy="#{c.type.name}"
+                                      styleClass="#{c.type == 'MATCHES_PATTERN' or c.type == 'COMPLETED' ? 'success' : 'danger'}">
+                                <h:outputText value="#{c.type.name}"/>
                             </p:column>
                             <p:column width="30">
                                 <p:commandLink actionListener="#{checkTemplateController.removeCheck(c)}"
-                                               update="checkingsTable @(.last-check-status)">
-                                    <p:confirm header="Удалить" message="Вы действительно хотите удалить Сверку?"
+                                               update="checkingsTable @(.update-after-chack)">
+                                    <p:confirm header="Удалить"
+                                               message="Вы действительно хотите удалить #{c['class'].simpleName eq 'CheckingResult' ? 'Сверку':'Выполнение'}?"
                                                icon="fa fa-warning"/>
                                     <i class="fa fa-lg fa-remove"> </i>
                                 </p:commandLink>
-                                <p:confirmDialog global="true">
-                                    <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes"
-                                                     icon="pi pi-check"/>
-                                    <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no"
-                                                     icon="pi pi-times"/>
-                                </p:confirmDialog>
                             </p:column>
                         </p:dataTable>
                     </div>
                     <div class="ui-g-2">
-                        <p:commandButton id="checkButton" actionListener="#{checkTemplateController.check(d)}"
-                                         onclick="startChecking(this)" widgetVar="check_#{d.id}"
+                        <p:commandButton actionListener="#{checkTemplateController.check(d)}"
                                          disabled="#{d.checkingNow or !d.enoughForCheck}"
                                          icon="fa fa-lg #{d.checkingNow ? 'fa-spinner fa-spin' : 'fa-play'}"
                                          styleClass="ui-g-12 update-after-chack"
+                                         update=":main-form:deviceTable:@row(#{row})"
                                          value="Начать сверку"/>
 
                         <p:commandButton disabled="#{!d.enoughForConnect}"
@@ -154,24 +161,67 @@
                       filterBy="#{d.lastCheckingResult.type.name}"
                       filterMatchMode="contains" styleClass="update-status">
                 <p:outputPanel styleClass="update-after-chack">
-                    <span class="#{c.type == 'MATCHES_PATTERN' ? 'success' : 'danger'}">
-                        <h:outputText value="#{d.lastCheckingResult.type.name}"/>
-                    </span>
-                    <small>
-                        <h:outputText value="#{d.lastCheckingResult.createAt}">
-                            <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
-                        </h:outputText>
-                    </small>
+                    <div style="display: flex; justify-content: center">
+                        <div style="text-align: center">
+                            <span class="#{d.lastCheckingResult.type == 'MATCHES_PATTERN' or d.lastCheckingResult.type == 'COMPLETED' ? 'success' : 'danger'}"
+                                  style="display: block; padding: 2px">
+                                <h:outputText value="#{d.lastCheckingResult.type.name}"/>
+                            </span>
+                            <small>
+                                <h:outputText value="#{d.lastCheckingResult.createAt}">
+                                    <f:convertDateTime pattern="yyyy.MM.dd HH:mm:ss"/>
+                                </h:outputText>
+                            </small>
+                        </div>
+                        <div>
+                            <i class="fa fa-lg #{d.checkingNow ? 'fa-spinner fa-spin' : ''}"> </i>
+                        </div>
+                    </div>
                 </p:outputPanel>
             </p:column>
 
             <p:column selectionMode="multiple" width="40" style="text-align: center"/>
         </p:dataTable>
 
+        <p:dialog widgetVar="executionDialog" modal="true" showEffect="fade" hideEffect="fade"
+                  resizable="false" closeOnEscape="true" position="center center" width="40%">
+            <f:facet name="header">
+                <h:outputText id="executionHeader"
+                              value="Детализация выполнения от #{checkTemplateController.selectedExecutionResult.createAt}"/>
+            </f:facet>
+
+            <p:outputPanel id="executionDetail" style="text-align: left; height: 600px; overflow: auto">
+                <p:repeat value="#{checkTemplateController.selectedExecutionResult.results.entrySet().toArray()}"
+                          var="r">
+                    <div><b>#{r.key}</b></div>
+                    <p:repeat value="${checkTemplateController.selectedExecutionResult.getResultsByList(r.key)}"
+                              var="result">
+                        <div>#{result}</div>
+                    </p:repeat>
+                </p:repeat>
+            </p:outputPanel>
+        </p:dialog>
+
+        <p:dialog widgetVar="commandsDialog" modal="true" showEffect="fade" hideEffect="fade" appendTo="@form"
+                  position="center center" width="600px" header="Введите команды для выполнения" resizable="false">
+            <p:focus for="commands"/>
+            <p:inputTextarea id="commands" value="#{terminalController.commands}" styleClass="ui-g-12" rows="10">
+                <p:ajax event="keyup" update="executeCommand"/>
+            </p:inputTextarea>
+            <p:commandButton id="executeCommand" value="Выполнить" style="margin-top: 10px"
+                             update="@(.update-after-chack) @form"
+                             disabled="#{empty terminalController.commands}" onstart="PF('commandsDialog').hide()"
+                             actionListener="#{terminalController.execute(checkTemplateController.selectedDevices)}">
+                <p:confirm header="Начать выполнение"
+                           message="Вы действительно хотите выполнить данные команды на всех выбранных устройствах?"
+                           icon="fa fa-warning"/>
+            </p:commandButton>
+        </p:dialog>
+
         <p:remoteCommand name="closeTerminal" actionListener="#{terminalController.close}"/>
         <p:remoteCommand name="updateTerminal" update="main-form:terminalDialogTitle terminal terminal-clear"/>
         <p:dialog widgetVar="terminalDialog" modal="true" showEffect="fade" hideEffect="fade" appendTo="@form"
-                  position="center center" width="600px">
+                  position="center center" width="600px" onHide="closeTerminal()">
             <f:facet name="header">
                 <p:outputPanel id="terminalDialogTitle">
                     <h:outputText value="#{terminalController.terminalStatus}"/>
@@ -179,9 +229,9 @@
             </f:facet>
             <p:focus for="terminal"/>
             <p:terminal id="terminal" widgetVar="term" commandHandler="#{terminalController.handleCommand}"
-                        prompt="#" styleClass="#{terminalController.telnet.connected ? '' : 'ui-overlay-hidden'}"/>
+                        prompt="#" styleClass="#{terminalController.terminal.login ? '' : 'ui-overlay-hidden'}"/>
             <p:commandButton id="terminal-clear" type="button" value="Очистить" onclick="PF('term').clear()"
-                             disabled="#{!terminalController.telnet.connected}"/>
+                             disabled="#{!terminalController.terminal.login}"/>
         </p:dialog>
 
         <p:dialog widgetVar="checkDialog" modal="true" showEffect="fade" hideEffect="fade"
@@ -218,6 +268,13 @@
                 </p:panel>
             </p:outputPanel>
         </p:dialog>
+
+        <p:confirmDialog global="true">
+            <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes"
+                             icon="pi pi-check"/>
+            <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no"
+                             icon="pi pi-times"/>
+        </p:confirmDialog>
     </ui:define>
 </ui:composition>
 </html>

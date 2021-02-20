@@ -1,6 +1,6 @@
 package i.solonin.configmanager.service;
 
-import i.solonin.configmanager.model.Device;
+import i.solonin.configmanager.model.master.Device;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.primefaces.model.file.UploadedFile;
 

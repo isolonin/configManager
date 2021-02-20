@@ -1,8 +1,8 @@
 package i.solonin.configmanager.controller;
 
-import i.solonin.configmanager.model.Model;
-import i.solonin.configmanager.model.Template;
-import i.solonin.configmanager.model.Vendor;
+import i.solonin.configmanager.model.master.Model;
+import i.solonin.configmanager.model.master.Template;
+import i.solonin.configmanager.model.master.Vendor;
 import i.solonin.configmanager.service.repos.ModelRepository;
 import i.solonin.configmanager.service.repos.TemplateRepository;
 import i.solonin.configmanager.service.repos.VendorRepository;

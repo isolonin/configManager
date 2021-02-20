@@ -1,6 +1,10 @@
 package i.solonin.configmanager.service;
 
 import i.solonin.configmanager.model.*;
+import i.solonin.configmanager.model.master.Device;
+import i.solonin.configmanager.model.master.Model;
+import i.solonin.configmanager.model.master.Region;
+import i.solonin.configmanager.model.master.Vendor;
 import i.solonin.configmanager.service.repos.DeviceRepository;
 import i.solonin.configmanager.service.repos.ModelRepository;
 import i.solonin.configmanager.service.repos.RegionRepository;

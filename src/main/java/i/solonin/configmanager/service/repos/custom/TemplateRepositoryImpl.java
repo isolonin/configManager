@@ -1,7 +1,7 @@
 package i.solonin.configmanager.service.repos.custom;
 
 import i.solonin.configmanager.model.DBId;
-import i.solonin.configmanager.model.Template;
+import i.solonin.configmanager.model.master.Template;
 import i.solonin.configmanager.model.WithName;
 import i.solonin.configmanager.service.repos.TemplateRepository;
 import lombok.RequiredArgsConstructor;

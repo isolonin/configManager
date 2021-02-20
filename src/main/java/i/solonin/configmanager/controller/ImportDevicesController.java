@@ -1,6 +1,6 @@
 package i.solonin.configmanager.controller;
 
-import i.solonin.configmanager.model.Device;
+import i.solonin.configmanager.model.master.Device;
 import i.solonin.configmanager.service.ImportService;
 import lombok.Getter;
 import lombok.Setter;

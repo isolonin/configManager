@@ -1,10 +1,14 @@
 package i.solonin.configmanager.service.connect;
 
-import i.solonin.configmanager.model.CheckingResult;
-import i.solonin.configmanager.model.Device;
+import i.solonin.configmanager.model.check.CheckingResult;
+import i.solonin.configmanager.model.check.ExecutionResult;
+import i.solonin.configmanager.model.check.Result;
+import i.solonin.configmanager.model.check.ResultType;
+import i.solonin.configmanager.model.master.Device;
 import i.solonin.configmanager.model.template.Divergence;
 import i.solonin.configmanager.service.repos.CheckingResultRepository;
 import i.solonin.configmanager.service.repos.DeviceRepository;
+import i.solonin.configmanager.service.repos.ExecutionResultRepository;
 import i.solonin.configmanager.service.template.Checker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,20 +16,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class CheckServiceImpl implements CheckService {
-    private final Map<Device, Future<Void>> currentTasks = new ConcurrentHashMap<>();
+public class ResultServiceImpl implements ResultService {
+    private final List<Device> currentTasks = new CopyOnWriteArrayList<>();
     private final List<String> filesNames = Arrays.asList("huawei_1.cfg", "huawei_2.cfg", "huawei_3.cfg", "huawei_4.cfg");
     private CompletableFuture<Void> futureCheckAll;
 
@@ -34,17 +41,16 @@ public class CheckServiceImpl implements CheckService {
     @Autowired
     private CheckingResultRepository checkingResultRepository;
     private final Checker checker;
+    private final EntityManager em;
 
     @Override
     public void check(Device device, Consumer<CheckingResult> consumer) {
-        CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> check(device))
+        CompletableFuture.supplyAsync(() -> check(device))
                 .thenAccept(r -> {
                     save(r);
-                    currentTasks.remove(device);
                     consumer.accept(r);
                     log.info("Stop chek device: {}", device.getId());
                 });
-        currentTasks.put(device, future);
     }
 
     @Override
@@ -55,17 +61,15 @@ public class CheckServiceImpl implements CheckService {
             return result;
         }).thenAccept(list -> {
             list.forEach(this::save);
-            log.info("Stop chek devices: {}", devices);
+            log.info("Stop chek devices: {}", devices.size());
         });
         return futureCheckAll;
     }
 
-    @Override
-    public boolean isCheckAllAlreadyRunning() {
-        return Optional.ofNullable(futureCheckAll).map(f -> !f.isDone()).orElse(false);
-    }
-
     private CheckingResult check(Device device) {
+        currentTasks.add(device);
+        device.setCheckingNow(true);
+
         CheckingResult result = new CheckingResult(device);
         log.info("Start chek device: {}", device.getId());
 
@@ -79,30 +83,38 @@ public class CheckServiceImpl implements CheckService {
             divergences.forEach(d -> d.setCheckingResult(result));
             result.setDivergences(divergences);
             device.getChecks().add(0, result);
+            Thread.sleep(1000);
         } catch (Exception e) {
             log.error(e.getMessage());
+        } finally {
+            device.setCheckingNow(false);
+            currentTasks.remove(device);
         }
         return result;
     }
 
     @Override
     public boolean isDeviceChecking(Device device) {
-        return currentTasks.containsKey(device);
+        return currentTasks.contains(device);
     }
 
     @Override
     @Transactional
-    public void remove(CheckingResult checkingResult) {
-        Device device = checkingResult.getDevice();
-        device.getChecks().remove(checkingResult);
+    public void remove(Result result) {
+        Device device = result.getDevice();
+        if (result instanceof CheckingResult)
+            device.getChecks().remove(result);
+        if (result instanceof ExecutionResult)
+            device.getExecutions().remove(result);
+
         deviceRepository.save(device);
     }
 
     private void save(CheckingResult checkingResult) {
         if (checkingResult.getDivergences().isEmpty())
-            checkingResult.setType(CheckingResult.Type.MATCHES_PATTERN);
+            checkingResult.setType(ResultType.MATCHES_PATTERN);
         else
-            checkingResult.setType(CheckingResult.Type.NOT_MATCHES_PATTERN);
+            checkingResult.setType(ResultType.NOT_MATCHES_PATTERN);
         checkingResultRepository.saveAndFlush(checkingResult);
     }
 }

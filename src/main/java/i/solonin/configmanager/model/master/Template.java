@@ -1,5 +1,7 @@
-package i.solonin.configmanager.model;
+package i.solonin.configmanager.model.master;
 
+import i.solonin.configmanager.model.DBEntity;
+import i.solonin.configmanager.model.WithName;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

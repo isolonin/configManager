@@ -1,7 +1,10 @@
-package i.solonin.configmanager.model;
+package i.solonin.configmanager.model.check;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import i.solonin.configmanager.model.DBEntity;
+import i.solonin.configmanager.model.master.Device;
+import i.solonin.configmanager.model.master.Template;
 import i.solonin.configmanager.model.template.Divergence;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +18,7 @@ import java.util.List;
 @Setter
 @Entity
 @NoArgsConstructor
-public class CheckingResult extends DBEntity {
+public class CheckingResult extends DBEntity implements Result {
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "deviceId")
@@ -24,7 +27,7 @@ public class CheckingResult extends DBEntity {
     private String deviceConf;
     @Lob
     private String templateConf;
-    private Type type = Type.CHECKING;
+    private ResultType type = ResultType.EXECUTING;
     @JsonBackReference
     @OneToMany(mappedBy = "checkingResult", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Divergence> divergences = new ArrayList<>();
@@ -43,21 +46,5 @@ public class CheckingResult extends DBEntity {
 
     public boolean hasError(int line) {
         return divergences.stream().anyMatch(d -> d.getTemplateLine() == line + 1);
-    }
-
-    public enum Type {
-        CHECKING("Проверяется"),
-        CONNECTION_FAILED("Не удалось подключиться"),
-        LOGIN_FAILED("Не удалось авторизоваться"),
-        COMMAND_FAILED("Не удалось выполнить команду"),
-        MATCHES_PATTERN("Соответствует шаблону"),
-        NOT_MATCHES_PATTERN("Не соответствует шаблону");
-
-        @Getter
-        private final String name;
-
-        Type(String name) {
-            this.name = name;
-        }
     }
 }

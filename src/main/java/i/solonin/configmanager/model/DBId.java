@@ -5,18 +5,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Date;
 import java.util.Objects;
 
 @Getter
 @Setter
 @MappedSuperclass
 @NoArgsConstructor
-public class DBId {
+public class DBId implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Access(AccessType.PROPERTY)
-    protected Long id;
+    public Long id;
 
     public boolean isNew() {
         return id == null;

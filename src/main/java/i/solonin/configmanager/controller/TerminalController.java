@@ -1,20 +1,22 @@
-package i.solonin.configmanager.controller.socket;
+package i.solonin.configmanager.controller;
 
-import i.solonin.configmanager.model.Device;
+import i.solonin.configmanager.model.master.Device;
+import i.solonin.configmanager.model.terminal.Terminal;
+import i.solonin.configmanager.service.connect.TerminalService;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.expectit.Expect;
-import net.sf.expectit.ExpectBuilder;
 import org.apache.commons.net.SocketClient;
-import org.apache.commons.net.telnet.TelnetClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import javax.inject.Named;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,62 +24,65 @@ import java.util.concurrent.CompletableFuture;
 @Controller
 @Named("terminalController")
 @Getter
-public class TerminalController {
-    private TelnetClient telnet = null;
+public class TerminalController extends AbstractController {
+    @Setter
+    private String commands;
+    private final Terminal terminal = new Terminal();
     private String terminalStatus = "Не подключено";
+
+    @Autowired
+    private TerminalService terminalService;
 
     @Autowired
     private SimpMessagingTemplate webSocket;
 
     public void connect(Device device) {
-        if (Optional.ofNullable(telnet).map(SocketClient::isConnected).orElse(false)) {
-            log.warn("terminal already connected and will be closed: {}", telnet);
+        if (Optional.ofNullable(terminal.getTelnet()).map(SocketClient::isConnected).orElse(false)) {
+            log.warn("terminal already connected and will be closed: {}", terminal.getTelnet());
             close();
         }
         CompletableFuture.runAsync(() -> {
             try {
                 terminalStatus = "Идёт подключение к устройству...";
-                telnet = new TelnetClient();
-                telnet.setConnectTimeout(5000);
-                telnet.connect(device.getHost());
-                webSocket.convertAndSend("/client/update-terminal-connection", true);
+                terminal.login(device);
                 terminalStatus = "Подключено";
-                log.info("successfully connected to {}", terminal());
+                log.info("successfully connected to {}", terminal.print());
+                webSocket.convertAndSend("/client/update-terminal-connection", true);
             } catch (Exception e) {
                 log.error(e.getMessage());
-                webSocket.convertAndSend("/client/update-terminal-connection", false);
                 terminalStatus = String.format("Не удалось соедениться: %s", e.getMessage());
+                webSocket.convertAndSend("/client/update-terminal-connection", false);
             }
         });
     }
 
+    public void execute(List<Device> devices) {
+        if (!StringUtils.isEmpty(commands)) {
+            terminalService.execute(commands, devices);
+            commands = null;
+            devices.clear();
+        } else {
+            showErrorMessage("Для начала выполнения необходимо указать команды");
+        }
+    }
+
     public void close() {
-        if (telnet == null) return;
         try {
             terminalStatus = "Соединение разорвано";
-            log.info("close connection {}", terminal());
-            telnet.disconnect();
+            log.info("close connection {}", terminal.print());
+            terminal.disconnect();
         } catch (Exception e) {
             log.error(e.getMessage());
         }
     }
 
     public String handleCommand(String command, String[] params) {
-        if (Optional.ofNullable(telnet).map(t -> !t.isConnected()).orElse(true)) return "Соединение не установлено";
+        if (!terminal.isLogin()) return "Соединение не установлено";
         try {
-            String send = String.join(" ", command, String.join(" ", params));
-            log.info("{}", send);
-            StringBuilder buffer = new StringBuilder();
-            Expect expect = new ExpectBuilder()
-                    .withOutput(telnet.getOutputStream())
-                    .withInputs(telnet.getInputStream())
-                    .withEchoOutput(buffer)
-                    .withEchoInput(buffer)
-                    .withExceptionOnFailure()
-                    .build();
-
-            expect.sendLine(send);
-            return buffer.toString();
+            String cmd = String.join(" ", command, String.join(" ", params));
+            String result = terminal.send(cmd);
+            log.info("{}: {}", cmd, result);
+            return result;
         } catch (Exception e) {
             close();
             log.error(e.getMessage());
@@ -93,15 +98,6 @@ public class TerminalController {
 
     @EventListener(SessionDisconnectEvent.class)
     public void handleWebsocketDisconnectListner(SessionDisconnectEvent event) {
-        if (telnet != null)
-            close();
-    }
-
-    private String terminal() {
-        if (telnet != null && telnet.getRemoteAddress() != null)
-            return Optional.ofNullable(telnet)
-                    .map(t -> String.format("%s:%d", telnet.getRemoteAddress().getHostAddress(), telnet.getRemotePort()))
-                    .orElse(null);
-        return "";
+        close();
     }
 }

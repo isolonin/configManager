@@ -1,6 +1,6 @@
 package i.solonin.configmanager.model.template;
 
-import i.solonin.configmanager.model.CheckingResult;
+import i.solonin.configmanager.model.check.CheckingResult;
 import i.solonin.configmanager.model.DBId;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

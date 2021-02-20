@@ -24,8 +24,7 @@
     <ui:define name="buttons">
         <p:commandButton value="Добавить" onclick="PF('addDialog').show()" immediate="true"/>
         <p:fileUpload fileUploadListener="#{importDevicesController.uploadFile}" label="Импортировать из Excel"
-                      auto="true"
-                      accept=".xls,.xlsx"/>
+                      auto="true" accept=".xls,.xlsx"/>
 
         <p:dialog header="Добавить устройство" widgetVar="addDialog" modal="true" resizable="false"
                   closeOnEscape="true">

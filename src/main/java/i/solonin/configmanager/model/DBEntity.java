@@ -13,7 +13,7 @@ import java.util.Date;
 @Setter
 @MappedSuperclass
 @NoArgsConstructor
-public class DBEntity extends DBId {
+public class DBEntity extends DBId implements WithDate {
     protected Date createAt;
     protected Date updateAt;
 

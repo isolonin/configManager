@@ -1,6 +1,11 @@
-package i.solonin.configmanager.model;
+package i.solonin.configmanager.model.master;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import i.solonin.configmanager.model.DBId;
+import i.solonin.configmanager.model.WithDate;
+import i.solonin.configmanager.model.check.CheckingResult;
+import i.solonin.configmanager.model.check.ExecutionResult;
+import i.solonin.configmanager.model.check.Result;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -38,9 +43,14 @@ public class Device extends DBId {
     private String firmware;
 
     @JsonBackReference
-    @OneToMany(mappedBy = "device", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createAt desc")
     private List<CheckingResult> checks = new ArrayList<>();
+
+    @JsonBackReference
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createAt desc")
+    private List<ExecutionResult> executions = new ArrayList<>();
 
     @Transient
     private ImportType importType;
@@ -60,8 +70,15 @@ public class Device extends DBId {
         this.firmware = other.getFirmware();
     }
 
-    public CheckingResult getLastCheckingResult() {
-        return checks.stream().max(Comparator.comparing(DBEntity::getCreateAt,
+    public List<Result> getResults() {
+        List<Result> result = new ArrayList<>(checks);
+        result.addAll(executions);
+        result.sort(Comparator.comparing(WithDate::getCreateAt).reversed());
+        return result;
+    }
+
+    public Result getLastCheckingResult() {
+        return getResults().stream().max(Comparator.comparing(Result::getCreateAt,
                 Comparator.nullsFirst(Comparator.naturalOrder()))).orElse(null);
     }
 

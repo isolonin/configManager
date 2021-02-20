@@ -1,6 +1,6 @@
 package i.solonin.configmanager.service.repos.custom;
 
-import i.solonin.configmanager.model.Region;
+import i.solonin.configmanager.model.master.Region;
 import i.solonin.configmanager.service.repos.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

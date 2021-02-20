@@ -1,8 +1,10 @@
 package i.solonin.configmanager.controller;
 
-import i.solonin.configmanager.model.CheckingResult;
-import i.solonin.configmanager.model.Device;
-import i.solonin.configmanager.service.connect.CheckService;
+import i.solonin.configmanager.model.check.CheckingResult;
+import i.solonin.configmanager.model.check.ExecutionResult;
+import i.solonin.configmanager.model.check.Result;
+import i.solonin.configmanager.model.master.Device;
+import i.solonin.configmanager.service.connect.ResultService;
 import i.solonin.configmanager.service.repos.DeviceRepository;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
@@ -17,7 +20,6 @@ import javax.inject.Named;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static i.solonin.configmanager.constant.Constants.NEW_LINE;
 
@@ -29,7 +31,7 @@ public class CheckTemplateController extends AbstractController {
     @Autowired
     private DeviceRepository deviceRepository;
     @Autowired
-    private CheckService checkService;
+    private ResultService resultService;
     @Autowired
     private SimpMessagingTemplate webSocket;
 
@@ -40,8 +42,10 @@ public class CheckTemplateController extends AbstractController {
     private List<Device> selectedDevices;
     @Setter
     private CheckingResult selectedCheckingResult;
+    private ExecutionResult selectedExecutionResult;
 
     @PostConstruct
+    @Transactional
     public void init() {
         devices = deviceRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
         devices.forEach(d -> {
@@ -49,44 +53,46 @@ public class CheckTemplateController extends AbstractController {
                 c.setTemplateConfig(Arrays.asList(c.getTemplateConf().split(NEW_LINE)));
                 c.setDeviceConfig(Arrays.asList(c.getDeviceConf().split(NEW_LINE)));
             });
-            d.setCheckingNow(checkService.isDeviceChecking(d));
+            d.setCheckingNow(resultService.isDeviceChecking(d));
         });
     }
 
     public void checkAll() {
-        if (!checkService.isCheckAllAlreadyRunning()) {
-            try {
-                List<Device> devices = Optional.ofNullable(selectedDevices).orElse(this.devices).stream()
-                        .filter(Device::isEnoughForCheck)
-                        .filter(d -> !checkService.isDeviceChecking(d))
-                        .collect(Collectors.toList());
-                checkService.check(devices).get();
-                selectedDevices = null;
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
+        if (!isCheckAllAlreadyRunning()) {
+            Optional.ofNullable(selectedDevices).orElse(this.devices).stream()
+                    .filter(Device::isEnoughForCheck)
+                    .filter(d -> !resultService.isDeviceChecking(d))
+                    .forEach(d -> resultService.check(d, r -> {
+                        selectedDevices.remove(d);
+                        init();
+                        webSocket.convertAndSend("/client/update-check-status", isCheckAllAlreadyRunning());
+                    }));
+        } else {
+            showErrorMessage("Сверка уже запущена. Дождитесь окончания операции");
         }
     }
 
-    public boolean isCheckAllAlreadyRunning() {
-        return checkService.isCheckAllAlreadyRunning();
+    public synchronized boolean isCheckAllAlreadyRunning() {
+        return Optional.ofNullable(selectedDevices).map(l -> l.stream().anyMatch(Device::isCheckingNow)).orElse(false);
     }
 
     public void check(Device device) {
-        device.setCheckingNow(true);
-        checkService.check(device, result -> {
+        resultService.check(device, result -> {
             try {
                 init();
-                device.setCheckingNow(false);
-                webSocket.convertAndSend("/client/update-check-status", device.getId());
+                webSocket.convertAndSend("/client/update-check-status", false);
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
         });
     }
 
-    public void removeCheck(CheckingResult checkingResult) {
-        checkService.remove(checkingResult);
+    public void setSelectedExecutionResult(ExecutionResult selectedExecutionResult) {
+        this.selectedExecutionResult = selectedExecutionResult;
+    }
+
+    public void removeCheck(Result result) {
+        resultService.remove(result);
         init();
     }
 }
